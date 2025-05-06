@@ -382,16 +382,7 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         int nrPoints = configuration[nameFigure]["nrPoints"];
                         int nrLines = configuration[nameFigure]["nrLines"];
 
-
-
-                        //Matrix matrix = Scale(scale) * rotateX(RotateX*(M_PI /180)) * rotateY(RotateY*(M_PI /180)) * rotateZ(RotateZ*(M_PI /180)) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-                        Matrix S = Scale(scale);
-                        Matrix rX = rotateX(RotateX);
-                        Matrix rY = rotateY(RotateY);
-                        Matrix rZ = rotateZ(RotateZ);
-                        Matrix T = translate(Vector3D::point(center[0], center[1], center[2]));
-
-                        Matrix matrix = S * rX * rY * rZ * T * V;
+                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
 
                         Figure f;
                         f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
@@ -450,7 +441,7 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
                 return LSystem2D(size, backgroundColor, inputfile, color);
         }
         if (image_type == "Wireframe") {
-                drawLines3D(configuration);
+                return drawLines3D(configuration);
         }
         return img::EasyImage();
 }
