@@ -11,6 +11,10 @@
 #include <list>
 #include <stack>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 class Face
 {
 public:
@@ -145,9 +149,9 @@ img::EasyImage drawLines2D(Lines2D &lines, const int size, std::vector<double> b
         double Yrange = yMax-yMin;
         double imageX = size*(Xrange/std::max(Xrange,Yrange));
         double imageY = size*(Yrange/std::max(Xrange,Yrange));
-        img::EasyImage image(lround(imageX)+1, lround(imageY)+1);
-        for(unsigned int i = 0; i < imageX; i++) {
-                for(unsigned int j = 0; j < imageY; j++)
+        img::EasyImage image(lround(imageX), lround(imageY));
+        for(unsigned int i = 0; i < imageX-1; i++) {
+                for(unsigned int j = 0; j < imageY-1; j++)
                 {
                         image(i,j).red = backgroundColor[0]*255;
                         image(i,j).green = backgroundColor[1]*255;
@@ -310,6 +314,7 @@ Matrix translate(const Vector3D &vector) {
         matrix(4,1) = vector.x;
         matrix(4,2) = vector.y;
         matrix(4,3) = vector.z;
+        return matrix;
 }
 void applyTransformation(Figure &fig, const Matrix &m) {
         for (auto &i : fig.points) {
