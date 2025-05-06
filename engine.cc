@@ -285,26 +285,29 @@ Matrix Scale(const double scale) {
 }
 Matrix rotateX(const double angle) {
         Matrix matrix;
-        matrix(2,2) = cos(angle);
-        matrix(2,3) = sin(angle);
-        matrix(3,2) = -sin(angle);
-        matrix(3,3) = cos(angle);
+        double radiant = angle * (M_PI /180);
+        matrix(2,2) = cos(radiant);
+        matrix(2,3) = sin(radiant);
+        matrix(3,2) = -sin(radiant);
+        matrix(3,3) = cos(radiant);
         return matrix;
 }
 Matrix rotateY(const double angle) {
         Matrix matrix;
-        matrix(1,1) = cos(angle);
-        matrix(1,3) = -sin(angle);
-        matrix(3,1) = sin(angle);
-        matrix(3,3) = cos(angle);
+        double radiant = angle * (M_PI /180);
+        matrix(1,1) = cos(radiant);
+        matrix(1,3) = -sin(radiant);
+        matrix(3,1) = sin(radiant);
+        matrix(3,3) = cos(radiant);
         return matrix;
 }
 Matrix rotateZ(const double angle) {
         Matrix matrix;
-        matrix(1,1) = cos(angle);
-        matrix(1,2) = sin(angle);
-        matrix(2,1) = -sin(angle);
-        matrix(2,2) = cos(angle);
+        double radiant = angle * (M_PI /180);
+        matrix(1,1) = cos(radiant);
+        matrix(1,2) = sin(radiant);
+        matrix(2,1) = -sin(radiant);
+        matrix(2,2) = cos(radiant);
         return matrix;
 }
 Matrix translate(const Vector3D &vector) {
@@ -333,9 +336,9 @@ Matrix eyePointTrans(const Vector3D &eyepoint) {
         V(1,1)= -sin(theta);
         V(1,2)= -cos(theta) * cos(phi);
         V(1,3)= cos(theta) * sin(phi);
-        V(2,1)= -cos(theta);
+        V(2,1)= cos(theta);
         V(2,2)= -sin(theta) * cos(phi);
-        V(2,3)= -sin(theta) * sin(phi);
+        V(2,3)= sin(theta) * sin(phi);
         V(3,2)= sin(phi);
         V(3,3)= cos(phi);
         V(4,3)= -r;
@@ -365,20 +368,30 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
         int nrFigures = configuration["General"]["nrFigures"];
         std::vector<double> eye = configuration["General"]["eye"];
         Figures3D figures;
+        Matrix V = eyePointTrans(Vector3D::point(eye[0], eye[1], eye[2]));
         for (int i = 0; i < nrFigures; i++) {
                 std::string nameFigure = "Figure" + std::to_string(i);
                 std::string figureType = configuration[nameFigure]["type"];
                 if (figureType == "LineDrawing") {
-                        int RotateX = configuration[nameFigure]["rotateX"];
-                        int RotateY = configuration[nameFigure]["rotateY"];
-                        int RotateZ = configuration[nameFigure]["rotateZ"];
+                        double RotateX = configuration[nameFigure]["rotateX"];
+                        double RotateY = configuration[nameFigure]["rotateY"];
+                        double RotateZ = configuration[nameFigure]["rotateZ"];
                         double scale = configuration[nameFigure]["scale"];
                         std::vector<double> center = configuration[nameFigure]["center"];
                         std::vector<double> color = configuration[nameFigure]["color"];
                         int nrPoints = configuration[nameFigure]["nrPoints"];
                         int nrLines = configuration[nameFigure]["nrLines"];
 
-                        Matrix matrix = Scale(scale) * rotateX(RotateX*M_PI/180) * rotateY(RotateY*M_PI/180) * rotateZ(RotateZ*M_PI/180) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+
+
+                        //Matrix matrix = Scale(scale) * rotateX(RotateX*(M_PI /180)) * rotateY(RotateY*(M_PI /180)) * rotateZ(RotateZ*(M_PI /180)) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+                        Matrix S = Scale(scale);
+                        Matrix rX = rotateX(RotateX);
+                        Matrix rY = rotateY(RotateY);
+                        Matrix rZ = rotateZ(RotateZ);
+                        Matrix T = translate(Vector3D::point(center[0], center[1], center[2]));
+
+                        Matrix matrix = S * rX * rY * rZ * T * V;
 
                         Figure f;
                         f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
