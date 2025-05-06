@@ -331,28 +331,28 @@ Matrix eyePointTrans(const Vector3D &eyepoint) {
         Matrix V;
 
         V(1,1)= -sin(theta);
-        V(1,2)= -cos(theta) * cos(theta);
-        V(1,3)= cos(theta) * sin(theta);
+        V(1,2)= -cos(theta) * cos(phi);
+        V(1,3)= cos(theta) * sin(phi);
         V(2,1)= -cos(theta);
-        V(2,2)= -sin(theta) * cos(theta);
-        V(2,3)= -sin(theta) * sin(theta);
-        V(3,2)= sin(theta);
-        V(3,3)= cos(theta);
+        V(2,2)= -sin(theta) * cos(phi);
+        V(2,3)= -sin(theta) * sin(phi);
+        V(3,2)= sin(phi);
+        V(3,3)= cos(phi);
         V(4,3)= -r;
 
         return V;
 }
-Point2D doProjection(const Vector3D &point, const double d) {
+Point2D doProjectionPoint(const Vector3D &point, const double d) {
         double X = d*point.x/-point.z;
         double Y = d*point.y/-point.z;
         return Point2D(X, Y);
 }
-Lines2D doProjection(const Figures3D &figures) {
+Lines2D doProjectionLines(const Figures3D &figures) {
         Lines2D lines;
         for (auto& f : figures) {
                 for (auto& face : f.faces) {
-                        Point2D pointX = doProjection(f.points[face.point_indexes[0]], 1);
-                        Point2D pointY = doProjection(f.points[face.point_indexes[1]], 1);
+                        Point2D pointX = doProjectionPoint(f.points[face.point_indexes[0]], 1);
+                        Point2D pointY = doProjectionPoint(f.points[face.point_indexes[1]], 1);
                         img::Color color = f.color;
                         lines.push_back(Line2D(pointX, pointY, color));
                 }
@@ -375,8 +375,6 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         double scale = configuration[nameFigure]["scale"];
                         std::vector<double> center = configuration[nameFigure]["center"];
                         std::vector<double> color = configuration[nameFigure]["color"];
-                        std::vector<std::vector<double>> points;
-                        std::vector<std::vector<double>> lines;
                         int nrPoints = configuration[nameFigure]["nrPoints"];
                         int nrLines = configuration[nameFigure]["nrLines"];
 
@@ -401,8 +399,8 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         figures.push_back(f);
                 }
         }
-        Lines2D lines = doProjection(figures);
-        return drawLines2D(lines, size, backgroundColor);
+        Lines2D list = doProjectionLines(figures);
+        return drawLines2D(list, size, backgroundColor);
 }
 img::EasyImage generate_image(const ini::Configuration &configuration)
 {
