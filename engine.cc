@@ -1,0 +1,465 @@
+#include "easy_image.h"
+#include "ini_configuration.h"
+#include "l_parser.h"
+#include "vector3d.h"
+
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <cmath>
+#include <list>
+#include <stack>
+
+class Face
+{
+public:
+        //De indexen refereren naar
+        //punten in de ‘points’ vector
+        //van de Figure-klasse
+        std::vector<int> point_indexes;
+};
+class Figure
+{
+public:
+        std::vector<Vector3D> points;
+        std::vector<Face> faces;
+        img::Color color;
+};
+typedef std::list<Figure> Figures3D;
+
+class Point2D {
+public:
+        Point2D(double x, double y)
+                : x(x),
+                  y(y) {
+        }
+
+        double x;
+        double y;
+};
+class Line2D {
+public:
+        Line2D(const Point2D &p1, const Point2D &p2, const img::Color &color)
+                : p1(p1),
+                  p2(p2),
+                  color(color) {
+        }
+
+        Point2D p1;
+        Point2D p2;
+        img::Color color;
+};
+using Lines2D = std::vector<Line2D>;
+
+img::EasyImage ColorRectangle(int width, int height) {
+        img::EasyImage image(width,height);
+        for(unsigned int i = 0; i < width; i++)
+        {
+                for(unsigned int j = 0; j < height; j++)
+                {
+                        image(i,j).red = i;
+                        image(i,j).green = j;
+                        image(i,j).blue = (i+j)%256;
+                }
+        }
+        std::ofstream fout("out.bmp", std::ios::binary);
+        fout << image;
+        fout.close();
+        return image;
+}
+img::EasyImage Blocks(int width, int height, std::vector<double> colorWhite, std::vector<double> colorBlack, int nrXBlocks, int nrYBlocks, bool invertColors) {
+        img::EasyImage image(width,height);
+        int width_pixel = width/nrXBlocks;
+        int height_pixel = height/nrYBlocks;
+        for(unsigned int i = 0; i < width; i++)
+        {
+                for(unsigned int j = 0; j < height; j++)
+                {
+                        int Bx = i/width_pixel;
+                        int By = j/height_pixel;
+                        if (invertColors) {
+                                if ((Bx+By)%2 == 0) {
+                                        image(i,j).red = colorBlack[0]*255;
+                                        image(i,j).green = colorBlack[1]*255;
+                                        image(i,j).blue = colorBlack[2]*255;
+                                }
+                                else {
+                                        image(i,j).red = colorWhite[0]*255;
+                                        image(i,j).green = colorWhite[1]*255;
+                                        image(i,j).blue = colorWhite[2]*255;
+                                }
+                        }
+                        else {
+                                if ((Bx+By)%2 == 0) {
+                                        image(i,j).red = colorWhite[0]*255;
+                                        image(i,j).green = colorWhite[1]*255;
+                                        image(i,j).blue = colorWhite[2]*255;
+                                }
+                                else {
+                                        image(i,j).red = colorBlack[0]*255;
+                                        image(i,j).green = colorBlack[1]*255;
+                                        image(i,j).blue = colorBlack[2]*255;
+                                }
+                        }
+                }
+        }
+        std::ofstream fout("out.bmp", std::ios::binary);
+        fout << image;
+        fout.close();
+        return image;
+}
+/*img::EasyImage Lines(int width, int height, std::string figure ,std::vector<double> backgroundcolor, std::vector<double> lineColor, int nrLines) {
+        img::EasyImage image(width,height);
+        if (figure =="QuarterCircle") {
+                int Hs = height/(nrLines-1);
+                int Ws = width/(nrLines-1);
+                for(unsigned int i = 0; i < width; i++) {
+                        for(unsigned int j = 0; j < height; j++)
+                        {
+                                if ()
+                                image(i,j).red = backgroundcolor[0]*255;
+                                image(i,j).green = backgroundcolor[1]*255;
+                                image(i,j).blue = backgroundcolor[2]*255;
+                        }
+                }
+        }
+        std::ofstream fout("out.bmp", std::ios::binary);
+        fout << image;
+        fout.close();
+        return image;
+}*/
+
+img::EasyImage drawLines2D(Lines2D &lines, const int size, std::vector<double> backgroundColor) {
+        double xMin = lines[0].p1.x;
+        double xMax = lines[0].p1.x;
+        double yMax = lines[0].p1.y;
+        double yMin = lines[0].p1.y;
+        for (auto &line : lines) {
+                xMin = std::min(std::min(line.p1.x,line.p2.x),xMin);
+                xMax = std::max(std::max(line.p1.x,line.p2.x),xMax);
+                yMax = std::max(std::max(line.p1.y,line.p2.y),yMax);
+                yMin = std::min(std::min(line.p1.y,line.p2.y),yMin);
+        }
+        double Xrange = xMax-xMin;
+        double Yrange = yMax-yMin;
+        double imageX = size*(Xrange/std::max(Xrange,Yrange));
+        double imageY = size*(Yrange/std::max(Xrange,Yrange));
+        img::EasyImage image(lround(imageX)+1, lround(imageY)+1);
+        for(unsigned int i = 0; i < imageX; i++) {
+                for(unsigned int j = 0; j < imageY; j++)
+                {
+                        image(i,j).red = backgroundColor[0]*255;
+                        image(i,j).green = backgroundColor[1]*255;
+                        image(i,j).blue = backgroundColor[2]*255;
+                }
+        }
+        double d = 0.95*(imageX/Xrange);
+        for (auto &line : lines) {
+                line.p1.x = line.p1.x * d;
+                line.p1.y = line.p1.y * d;
+                line.p2.x = line.p2.x * d;
+                line.p2.y = line.p2.y * d;
+        }
+        double DCx = d*((xMin+xMax)/2);
+        double DCy = d*((yMin+yMax)/2);
+        double dx = (imageX/2)-DCx;
+        double dy = (imageY/2)-DCy;
+        for (auto &line : lines) {
+                line.p1.x += dx;
+                line.p1.y += dy;
+                line.p2.x += dx;
+                line.p2.y += dy;
+                lround(line.p1.x);
+                lround(line.p1.y);
+                lround(line.p2.x);
+                lround(line.p2.y);
+                image.draw_line(line.p1.x, line.p1.y, line.p2.x, line.p2.y, line.color);
+        }
+        std::ofstream fout("out.bmp", std::ios::binary);
+        fout << image;
+        fout.close();
+        return image;
+}
+
+img::EasyImage LSystem2D(int size, std::vector<double> backgroundColor, std::string inputfile, std::vector<double> color){
+        LParser::LSystem2D l_system;
+        Lines2D list;
+
+        std::ifstream input_stream(inputfile);
+        input_stream >> l_system;
+        input_stream.close();
+
+        std::stack<Point2D> stack;
+        std::stack<double> stack1;
+
+        img::Color lineColor;
+        lineColor.red = color[0]*255;
+        lineColor.green = color[1]*255;
+        lineColor.blue = color[2]*255;
+        double radial = l_system.get_angle() * M_PI/180;
+        double startingradial = l_system.get_starting_angle() * M_PI/180;
+        std::set<char> alphabet = l_system.get_alphabet();
+        std::vector<bool> draws;
+        for (char c : alphabet) {
+                bool draw = l_system.draw(c);
+                draws.push_back(draw);
+        }
+        std::string init = l_system.get_initiator();
+        std::string startingstring = init;
+        std::string endstring = "";
+        for (int i = 0; i < l_system.get_nr_iterations(); i++) {
+                for (char k : startingstring) {
+                        for (char j: alphabet) {
+                                if (k == j) {
+                                        endstring += l_system.get_replacement(j);
+                                }
+                        }
+                        if (k == '+')
+                                endstring += "+";
+                        else if (k == '-')
+                                endstring += "-";
+                        else if (k == '(')
+                                endstring += "(";
+                        else if (k == ')')
+                                endstring += ")";
+                }
+                startingstring = endstring;
+                endstring = "";
+        }
+        double coorX = 0;
+        double coorY = 0;
+        double alpha = startingradial;
+        for (char c : startingstring) {
+                for (char k: alphabet) {
+                        if (c==k) {
+                                if (l_system.draw(k)) {
+                                        double tempcoorX = coorX + cos(alpha);
+                                        double tempcoorY = coorY + sin(alpha);
+                                        Line2D line(Point2D(coorX, coorY), Point2D(tempcoorX,tempcoorY), lineColor);
+                                        list.push_back(line);
+                                        coorX = tempcoorX;
+                                        coorY = tempcoorY;
+                                }
+                                else {
+                                        coorX += cos(alpha);
+                                        coorY += sin(alpha);
+                                }
+                        }
+                }
+                if (c=='+') {
+                        alpha += radial;
+                }
+                if (c=='-') {
+                        alpha -= radial;
+                }
+                if (c=='(') {
+                        stack.push(Point2D(coorX,coorY));
+                        stack1.push(alpha);
+                }
+                if (c==')') {
+                        if (!stack.empty() && !stack1.empty()) {
+                                Point2D tempPoint = stack.top();
+                                alpha = stack1.top();
+                                coorX = tempPoint.x;
+                                coorY = tempPoint.y;
+                                stack.pop();
+                                stack1.pop();
+                        }
+                }
+        }
+        return drawLines2D(list, size, backgroundColor);
+}
+
+/*img::EasyImage drawLines3D(int size, std::vector<double> backgroundColor, int nrFigures, std::vector<double> eye, ) {
+
+}*/
+Matrix Scale(const double scale) {
+        Matrix matrix;
+        matrix(1,1) = scale;
+        matrix(2,2) = scale;
+        matrix(3,3) = scale;
+        return matrix;
+}
+Matrix rotateX(const double angle) {
+        Matrix matrix;
+        matrix(2,2) = cos(angle);
+        matrix(2,3) = sin(angle);
+        matrix(3,2) = -sin(angle);
+        matrix(3,3) = cos(angle);
+        return matrix;
+}
+Matrix rotateY(const double angle) {
+        Matrix matrix;
+        matrix(1,1) = cos(angle);
+        matrix(1,3) = -sin(angle);
+        matrix(3,1) = sin(angle);
+        matrix(3,3) = cos(angle);
+        return matrix;
+}
+Matrix rotateZ(const double angle) {
+        Matrix matrix;
+        matrix(1,1) = cos(angle);
+        matrix(1,2) = sin(angle);
+        matrix(2,1) = -sin(angle);
+        matrix(2,2) = cos(angle);
+        return matrix;
+}
+Matrix translate(const Vector3D &vector) {
+        Matrix matrix;
+        matrix(4,1) = vector.x;
+        matrix(4,2) = vector.y;
+        matrix(4,3) = vector.z;
+}
+void applyTransformation(Figure &fig, const Matrix &m) {
+        for (auto &i : fig.points) {
+                i *= m;
+        }
+}
+
+img::EasyImage generate_image(const ini::Configuration &configuration)
+{
+        std::string image_type = configuration["General"]["type"];
+        if (image_type == "IntroColorRectangle") {
+                int image_width = configuration["ImageProperties"]["width"];
+                int image_height = configuration["ImageProperties"]["height"];
+                return ColorRectangle(image_width,image_height);
+        }
+        if (image_type == "IntroBlocks") {
+                int image_width = configuration["ImageProperties"]["width"];
+                int image_height = configuration["ImageProperties"]["height"];
+                std::vector<double> colorWhite = configuration["BlockProperties"]["colorWhite"];
+                std::vector<double> colorBlack = configuration["BlockProperties"]["colorBlack"];
+                int nrXBlocks = configuration["BlockProperties"]["nrXBlocks"];
+                int nrYBlocks = configuration["BlockProperties"]["nrYBlocks"];
+                bool invertColors = configuration["BlockProperties"]["invertColors"];
+                return Blocks(image_width,image_height,colorWhite,colorBlack,nrXBlocks,nrYBlocks,invertColors);
+        }
+        /*if (image_type == "IntroLines") {
+                int image_width = configuration["ImageProperties"]["width"];
+                int image_height = configuration["ImageProperties"]["height"];
+                std::string lineType = configuration["LineProperties"]["figure"];
+                std::vector<double> backgroundColor = configuration["LineProperties"]["backgroundcolor"];
+                std::vector<double> lineColor = configuration["LineProperties"]["lineColor"];
+                int nrLines = configuration["LineProperties"]["nrLines"];
+                return Lines(image_width,image_height,lineType,backgroundColor,lineColor,nrLines);
+        }*/
+        if (image_type == "2DLSystem") {
+                int size = configuration["General"]["size"];
+                std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
+                std::string inputfile = configuration["2DLSystem"]["inputfile"];
+                std::vector<double> color = configuration["2DLSystem"]["color"];
+                return LSystem2D(size, backgroundColor, inputfile, color);
+        }
+        if (image_type == "Wireframe") {
+                int size = configuration["General"]["size"];
+                std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
+                int nrFigures = configuration["General"]["nrFigures"];
+                std::vector<double> eye = configuration["General"]["eye"];
+                for (int i = 0; i < nrFigures; i++) {
+                        std::string nameFigure = "Figure" + std::to_string(i);
+                        std::string figureType = configuration[nameFigure]["type"];
+                        if (figureType == "LineDrawing") {
+                                int rotateX = configuration[nameFigure]["rotateX"];
+                                int rotateY = configuration[nameFigure]["rotateY"];
+                                int rotateZ = configuration[nameFigure]["rotateZ"];
+                                double scale = configuration[nameFigure]["scale"];
+                                std::vector<double> center = configuration[nameFigure]["center"];
+                                std::vector<double> color = configuration[nameFigure]["color"];
+                                std::vector<std::vector<double>> points;
+                                std::vector<std::vector<double>> lines;
+                                int nrPoints = configuration[nameFigure]["nrPoints"];
+                                int nrLines = configuration[nameFigure]["nrLines"];
+                                for (int j = 0; j < nrPoints; j++) {
+                                        std::string namePoint = "point" + std::to_string(j);
+                                        std::vector<double> point = configuration[nameFigure][namePoint];
+                                        points.push_back(point);
+                                }
+                                for (int k = 0; k < nrLines; k++) {
+                                        std::string nameLine = "line" + std::to_string(k);
+                                        std::vector<double> line = configuration[nameFigure][nameLine];
+                                        lines.push_back(line);
+                                }
+                        }
+                }
+        }
+        return img::EasyImage();
+}
+
+int main(int argc, char const* argv[])
+{
+        int retVal = 0;
+        try
+        {
+                std::vector<std::string> args = std::vector<std::string>(argv+1, argv+argc);
+                if (args.empty()) {
+                        std::ifstream fileIn("filelist");
+                        std::string filelistName;
+                        while (std::getline(fileIn, filelistName)) {
+                                args.push_back(filelistName);
+                        }
+                }
+                for(std::string fileName : args)
+                {
+                        ini::Configuration conf;
+                        try
+                        {
+                                std::ifstream fin(fileName);
+                                if (fin.peek() == std::istream::traits_type::eof()) {
+                                    std::cout << "Ini file appears empty. Does '" <<
+                                    fileName << "' exist?" << std::endl;
+                                    continue;
+                                }
+                                fin >> conf;
+                                fin.close();
+                        }
+                        catch(ini::ParseException& ex)
+                        {
+                                std::cerr << "Error parsing file: " << fileName << ": " << ex.what() << std::endl;
+                                retVal = 1;
+                                continue;
+                        }
+
+                        img::EasyImage image = generate_image(conf);
+                        if(image.get_height() > 0 && image.get_width() > 0)
+                        {
+                                std::string::size_type pos = fileName.rfind('.');
+                                if(pos == std::string::npos)
+                                {
+                                        //filename does not contain a '.' --> append a '.bmp' suffix
+                                        fileName += ".bmp";
+                                }
+                                else
+                                {
+                                        fileName = fileName.substr(0,pos) + ".bmp";
+                                }
+                                try
+                                {
+                                        std::ofstream f_out(fileName.c_str(),std::ios::trunc | std::ios::out | std::ios::binary);
+                                        f_out << image;
+
+                                }
+                                catch(std::exception& ex)
+                                {
+                                        std::cerr << "Failed to write image to file: " << ex.what() << std::endl;
+                                        retVal = 1;
+                                }
+                        }
+                        else
+                        {
+                                std::cout << "Could not generate image for " << fileName << std::endl;
+                        }
+                }
+        }
+        catch(const std::bad_alloc &exception)
+        {
+    		//When you run out of memory this exception is thrown. When this happens the return value of the program MUST be '100'.
+    		//Basically this return value tells our automated test scripts to run your engine on a pc with more memory.
+    		//(Unless of course you are already consuming the maximum allowed amount of memory)
+    		//If your engine does NOT adhere to this requirement you risk losing points because then our scripts will
+		//mark the test as failed while in reality it just needed a bit more memory
+                std::cerr << "Error: insufficient memory" << std::endl;
+                retVal = 100;
+        }
+        return retVal;
+}
