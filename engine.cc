@@ -11,6 +11,7 @@
 #include <list>
 #include <stack>
 
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -275,9 +276,6 @@ img::EasyImage LSystem2D(int size, std::vector<double> backgroundColor, std::str
         return drawLines2D(list, size, backgroundColor);
 }
 
-/*img::EasyImage drawLines3D(int size, std::vector<double> backgroundColor, int nrFigures, std::vector<double> eye, ) {
-
-}*/
 Matrix Scale(const double scale) {
         Matrix matrix;
         matrix(1,1) = scale;
@@ -321,7 +319,91 @@ void applyTransformation(Figure &fig, const Matrix &m) {
                 i *= m;
         }
 }
+void toPolar(const Vector3D &point, double &theta, double &phi, double &r) {
+        r = sqrt(pow(point.x,2)+pow(point.y,2)+pow(point.z,2));
+        theta = atan2(point.y,point.x);
+        phi = acos(point.z/r);
+}
+Matrix eyePointTrans(const Vector3D &eyepoint) {
+        double theta, phi, r;
+        toPolar(eyepoint, theta, phi, r);
 
+        Matrix V;
+
+        V(1,1)= -sin(theta);
+        V(1,2)= -cos(theta) * cos(theta);
+        V(1,3)= cos(theta) * sin(theta);
+        V(2,1)= -cos(theta);
+        V(2,2)= -sin(theta) * cos(theta);
+        V(2,3)= -sin(theta) * sin(theta);
+        V(3,2)= sin(theta);
+        V(3,3)= cos(theta);
+        V(4,3)= -r;
+
+        return V;
+}
+Point2D doProjection(const Vector3D &point, const double d) {
+        double X = d*point.x/-point.z;
+        double Y = d*point.y/-point.z;
+        return Point2D(X, Y);
+}
+Lines2D doProjection(const Figures3D &figures) {
+        Lines2D lines;
+        for (auto& f : figures) {
+                for (auto& face : f.faces) {
+                        Point2D pointX = doProjection(f.points[face.point_indexes[0]], 1);
+                        Point2D pointY = doProjection(f.points[face.point_indexes[1]], 1);
+                        img::Color color = f.color;
+                        lines.push_back(Line2D(pointX, pointY, color));
+                }
+        }
+        return lines;
+}
+img::EasyImage drawLines3D(const ini::Configuration &configuration) {
+        int size = configuration["General"]["size"];
+        std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
+        int nrFigures = configuration["General"]["nrFigures"];
+        std::vector<double> eye = configuration["General"]["eye"];
+        Figures3D figures;
+        for (int i = 0; i < nrFigures; i++) {
+                std::string nameFigure = "Figure" + std::to_string(i);
+                std::string figureType = configuration[nameFigure]["type"];
+                if (figureType == "LineDrawing") {
+                        int RotateX = configuration[nameFigure]["rotateX"];
+                        int RotateY = configuration[nameFigure]["rotateY"];
+                        int RotateZ = configuration[nameFigure]["rotateZ"];
+                        double scale = configuration[nameFigure]["scale"];
+                        std::vector<double> center = configuration[nameFigure]["center"];
+                        std::vector<double> color = configuration[nameFigure]["color"];
+                        std::vector<std::vector<double>> points;
+                        std::vector<std::vector<double>> lines;
+                        int nrPoints = configuration[nameFigure]["nrPoints"];
+                        int nrLines = configuration[nameFigure]["nrLines"];
+
+                        Matrix matrix = Scale(scale) * rotateX(RotateX*M_PI/180) * rotateY(RotateY*M_PI/180) * rotateZ(RotateZ*M_PI/180) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+
+                        Figure f;
+                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
+                        for (int j = 0; j < nrPoints; j++) {
+                                std::string namePoint = "point" + std::to_string(j);
+                                std::vector<double> point = configuration[nameFigure][namePoint];
+                                f.points.push_back(Vector3D::point(point[0],point[1],point[2]));
+                        }
+                        for (int k = 0; k < nrLines; k++) {
+                                std::string nameLine = "line" + std::to_string(k);
+                                std::vector<int> line = configuration[nameFigure][nameLine];
+                                Face face;
+                                face.point_indexes = line;
+                                f.faces.push_back(face);
+                        }
+
+                        applyTransformation(f, matrix);
+                        figures.push_back(f);
+                }
+        }
+        Lines2D lines = doProjection(figures);
+        return drawLines2D(lines, size, backgroundColor);
+}
 img::EasyImage generate_image(const ini::Configuration &configuration)
 {
         std::string image_type = configuration["General"]["type"];
@@ -357,36 +439,7 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
                 return LSystem2D(size, backgroundColor, inputfile, color);
         }
         if (image_type == "Wireframe") {
-                int size = configuration["General"]["size"];
-                std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
-                int nrFigures = configuration["General"]["nrFigures"];
-                std::vector<double> eye = configuration["General"]["eye"];
-                for (int i = 0; i < nrFigures; i++) {
-                        std::string nameFigure = "Figure" + std::to_string(i);
-                        std::string figureType = configuration[nameFigure]["type"];
-                        if (figureType == "LineDrawing") {
-                                int rotateX = configuration[nameFigure]["rotateX"];
-                                int rotateY = configuration[nameFigure]["rotateY"];
-                                int rotateZ = configuration[nameFigure]["rotateZ"];
-                                double scale = configuration[nameFigure]["scale"];
-                                std::vector<double> center = configuration[nameFigure]["center"];
-                                std::vector<double> color = configuration[nameFigure]["color"];
-                                std::vector<std::vector<double>> points;
-                                std::vector<std::vector<double>> lines;
-                                int nrPoints = configuration[nameFigure]["nrPoints"];
-                                int nrLines = configuration[nameFigure]["nrLines"];
-                                for (int j = 0; j < nrPoints; j++) {
-                                        std::string namePoint = "point" + std::to_string(j);
-                                        std::vector<double> point = configuration[nameFigure][namePoint];
-                                        points.push_back(point);
-                                }
-                                for (int k = 0; k < nrLines; k++) {
-                                        std::string nameLine = "line" + std::to_string(k);
-                                        std::vector<double> line = configuration[nameFigure][nameLine];
-                                        lines.push_back(line);
-                                }
-                        }
-                }
+                drawLines3D(configuration);
         }
         return img::EasyImage();
 }
@@ -468,3 +521,28 @@ int main(int argc, char const* argv[])
         }
         return retVal;
 }
+/*int main()
+{
+        Matrix rotZ, trans;
+        Vector3D p0;
+        rotZ(1,1) = 0.866025404;
+        rotZ(1,2) = 0.5;
+        rotZ(2,1) = -0.5;
+        rotZ(2,2) = rotZ(1,1);
+        trans(4,1) = 1.0;
+        trans(4,2) = 2.0;
+        trans(4,3) = 3.0;
+        Matrix combined = rotZ*trans;
+
+        p0 = Vector3D::point(2.0, 3.0, 4.0);
+        std::cout << "p0 =\t\t" << p0 << std::endl;
+        Vector3D p1 = p0*rotZ;
+        std::cout << "p1 = p0*rotZ =\t"
+                << p1 << std::endl;
+        std::cout << "p1*trans =\t"
+                << (p1*trans) << std::endl;
+        std::cout << "p0*combined =\t"
+                << (p0*combined) << std::endl;
+        return 0;
+}*/
+
