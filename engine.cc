@@ -371,6 +371,9 @@ Lines2D doProjectionLines(const Figures3D &figures) {
         }
         return lines;
 }
+int getIndex(int k, int j, int m) {
+        return k * m + j;
+}
 img::EasyImage drawLines3D(const ini::Configuration &configuration) {
         int size = configuration["General"]["size"];
         std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
@@ -767,12 +770,12 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         double r = configuration[nameFigure]["r"];
                         double R = configuration[nameFigure]["R"];
 
-                        std::vector<std::vector<int>> track(n, std::vector<int>(m));
-                        int counter = 0;
+                        // std::vector<std::vector<int>> track(n, std::vector<int>(m));
+                        // int counter = 0;
 
-                        for (int k = 0; k < n; k++) {
+                        for (int k = 0; k < n; ++k) {
                                 double theta = 2 * M_PI * k / n;
-                                for (int j = 0; j < m; j++) {
+                                for (int j = 0; j < m; ++j) {
                                         double phi = 2 * M_PI * j / m;
 
                                         double x = (R + r * cos(phi)) * cos(theta);
@@ -780,17 +783,16 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                                         double z = r * sin(phi);
 
                                         f.points.push_back(Vector3D::point(x, y, z));
-                                        track[k][j] = counter++;
                                 }
                         }
 
-                        // Faces (quads between tube segments)
-                        for (int k = 0; k < n; k++) {
-                                for (int j = 0; j < m; j++) {
-                                        int a = track[k][j];
-                                        int b = track[(k + 1) % n][j];
-                                        int c = track[(k + 1) % n][(j + 1) % m];
-                                        int d = track[k][(j + 1) % m];
+                        // Faces
+                        for (int k = 0; k < n; ++k) {
+                                for (int j = 0; j < m; ++j) {
+                                        int a = getIndex(k, j, m);
+                                        int b = getIndex((k + 1) % n, j, m);
+                                        int c = getIndex((k + 1) % n, (j + 1) % m, m);
+                                        int d = getIndex(k, (j + 1) % m, m);
                                         f.faces.push_back({{a, b, c, d}});
                                 }
                         }
