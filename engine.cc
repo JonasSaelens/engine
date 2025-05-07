@@ -354,18 +354,14 @@ Lines2D doProjectionLines(const Figures3D &figures) {
         Lines2D lines;
         for (auto& f : figures) {
                 for (auto& face : f.faces) {
-                        for (int i = 0; i < face.point_indexes.size(); i++) {
-                                img::Color color = f.color;
-                                if (i == face.point_indexes.size()-1) {
-                                        Point2D pointX = doProjectionPoint(f.points[face.point_indexes[i]], 1);
-                                        Point2D pointY = doProjectionPoint(f.points[face.point_indexes[0]], 1);
-                                        lines.push_back(Line2D(pointX, pointY, color));
-                                }
-                                else {
-                                        Point2D pointX = doProjectionPoint(f.points[face.point_indexes[i]], 1);
-                                        Point2D pointY = doProjectionPoint(f.points[face.point_indexes[i+1]], 1);
-                                        lines.push_back(Line2D(pointX, pointY, color));
-                                }
+                        img::Color color = f.color;
+                        int n = face.point_indexes.size();
+                        for (int i = 0; i < n; ++i) {
+                                int current_index = face.point_indexes[i];
+                                int next_index = face.point_indexes[(i + 1) % n];
+                                Point2D pointX = doProjectionPoint(f.points[current_index], 1);
+                                Point2D pointY = doProjectionPoint(f.points[next_index], 1);
+                                lines.push_back(Line2D(pointX, pointY, color));
                         }
                 }
         }
@@ -535,16 +531,12 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                 else if (figureType == "Icosahedron") {
                         Figure f;
                         f.points.push_back(Vector3D::point(0, 0, sqrt(5)/2));
-                        f.points.push_back(Vector3D::point(1, 0, 0.5));
-                        f.points.push_back(Vector3D::point(cos((2*M_PI)/5), sin((2*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos((4*M_PI)/5), sin((4*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos((6*M_PI)/5), sin((6*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos((8*M_PI)/5), sin((8*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos(M_PI/5), sin(M_PI/5), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((2*M_PI)/5)), sin((M_PI/5)+((2*M_PI)/5)), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((4*M_PI)/5)), sin((M_PI/5)+((4*M_PI)/5)), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((6*M_PI)/5)), sin((M_PI/5)+((6*M_PI)/5)), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((8*M_PI)/5)), sin((M_PI/5)+((8*M_PI)/5)), -0.5));
+                        for (int k = 2; k<7; k++) {
+                                f.points.push_back(Vector3D::point(cos((k-2)*2*M_PI/5), sin((k-2)*2*M_PI/5), 0.5));
+                        }
+                        for (int k = 7; k<12; k++) {
+                                f.points.push_back(Vector3D::point(cos(M_PI/5+(k-7)*2*M_PI/5), sin(M_PI/5+(k-7)*2*M_PI/5), -0.5));
+                        }
                         f.points.push_back(Vector3D::point(0, 0, -sqrt(5)/2));
                         f.faces={
                                 {{0,1,2}},{{0,2,3}},{{0,3,4}},{{0,4,5}},{{0,5,1}},
@@ -568,16 +560,12 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                 else if (figureType == "Dodecahedron") {
                         Figure f1;
                         f1.points.push_back(Vector3D::point(0, 0, sqrt(5)/2));
-                        f1.points.push_back(Vector3D::point(1, 0, 0.5));
-                        f1.points.push_back(Vector3D::point(cos((2*M_PI)/5), sin((2*M_PI)/5), 0.5));
-                        f1.points.push_back(Vector3D::point(cos((4*M_PI)/5), sin((4*M_PI)/5), 0.5));
-                        f1.points.push_back(Vector3D::point(cos((6*M_PI)/5), sin((6*M_PI)/5), 0.5));
-                        f1.points.push_back(Vector3D::point(cos((8*M_PI)/5), sin((8*M_PI)/5), 0.5));
-                        f1.points.push_back(Vector3D::point(cos(M_PI/5), sin(M_PI/5), -0.5));
-                        f1.points.push_back(Vector3D::point(cos((M_PI/5)+((2*M_PI)/5)), sin((M_PI/5)+((2*M_PI)/5)), -0.5));
-                        f1.points.push_back(Vector3D::point(cos((M_PI/5)+((4*M_PI)/5)), sin((M_PI/5)+((4*M_PI)/5)), -0.5));
-                        f1.points.push_back(Vector3D::point(cos((M_PI/5)+((6*M_PI)/5)), sin((M_PI/5)+((6*M_PI)/5)), -0.5));
-                        f1.points.push_back(Vector3D::point(cos((M_PI/5)+((8*M_PI)/5)), sin((M_PI/5)+((8*M_PI)/5)), -0.5));
+                        for (int k = 2; k<7; k++) {
+                                f1.points.push_back(Vector3D::point(cos((k-2)*2*M_PI/5), sin((k-2)*2*M_PI/5), 0.5));
+                        }
+                        for (int k = 7; k<12; k++) {
+                                f1.points.push_back(Vector3D::point(cos(M_PI/5+(k-7)*2*M_PI/5), sin(M_PI/5+(k-7)*2*M_PI/5), -0.5));
+                        }
                         f1.points.push_back(Vector3D::point(0, 0, -sqrt(5)/2));
                         f1.faces={
                                 {{0,1,2}},{{0,2,3}},{{0,3,4}},{{0,4,5}},{{0,5,1}},
@@ -616,16 +604,12 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                 else if (figureType == "Sphere") {
                         Figure f;
                         f.points.push_back(Vector3D::point(0, 0, sqrt(5)/2));
-                        f.points.push_back(Vector3D::point(1, 0, 0.5));
-                        f.points.push_back(Vector3D::point(cos((2*M_PI)/5), sin((2*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos((4*M_PI)/5), sin((4*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos((6*M_PI)/5), sin((6*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos((8*M_PI)/5), sin((8*M_PI)/5), 0.5));
-                        f.points.push_back(Vector3D::point(cos(M_PI/5), sin(M_PI/5), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((2*M_PI)/5)), sin((M_PI/5)+((2*M_PI)/5)), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((4*M_PI)/5)), sin((M_PI/5)+((4*M_PI)/5)), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((6*M_PI)/5)), sin((M_PI/5)+((6*M_PI)/5)), -0.5));
-                        f.points.push_back(Vector3D::point(cos((M_PI/5)+((8*M_PI)/5)), sin((M_PI/5)+((8*M_PI)/5)), -0.5));
+                        for (int k = 2; k<7; k++) {
+                                f.points.push_back(Vector3D::point(cos((k-2)*2*M_PI/5), sin((k-2)*2*M_PI/5), 0.5));
+                        }
+                        for (int k = 7; k<12; k++) {
+                                f.points.push_back(Vector3D::point(cos(M_PI/5+(k-7)*2*M_PI/5), sin(M_PI/5+(k-7)*2*M_PI/5), -0.5));
+                        }
                         f.points.push_back(Vector3D::point(0, 0, -sqrt(5)/2));
                         f.faces={
                                 {{0,1,2}},{{0,2,3}},{{0,3,4}},{{0,4,5}},{{0,5,1}},
