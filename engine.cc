@@ -770,9 +770,6 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         double r = configuration[nameFigure]["r"];
                         double R = configuration[nameFigure]["R"];
 
-                        // std::vector<std::vector<int>> track(n, std::vector<int>(m));
-                        // int counter = 0;
-
                         for (int k = 0; k < n; ++k) {
                                 double theta = 2 * M_PI * k / n;
                                 for (int j = 0; j < m; ++j) {
@@ -786,7 +783,6 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                                 }
                         }
 
-                        // Faces
                         for (int k = 0; k < n; ++k) {
                                 for (int j = 0; j < m; ++j) {
                                         int a = getIndex(k, j, m);
