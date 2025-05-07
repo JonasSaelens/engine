@@ -420,24 +420,14 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         f.points.push_back(Vector3D::point(-1,-1,-1));
                         f.points.push_back(Vector3D::point(1,-1,1));
                         f.points.push_back(Vector3D::point(-1,1,1));
-                        Face face1;
-                        face1.point_indexes = {0,4,2,6};
-                        f.faces.push_back(face1);
-                        Face face2;
-                        face2.point_indexes = {4,1,7,2};
-                        f.faces.push_back(face2);
-                        Face face3;
-                        face3.point_indexes = {1,5,3,7};
-                        f.faces.push_back(face3);
-                        Face face4;
-                        face4.point_indexes = {5,0,6,3};
-                        f.faces.push_back(face4);
-                        Face face5;
-                        face5.point_indexes = {6,2,7,3};
-                        f.faces.push_back(face5);
-                        Face face6;
-                        face6.point_indexes = {0,5,1,4};
-                        f.faces.push_back(face6);
+                        f.faces = {
+                                {{0, 4, 2, 6}},
+                                {{4, 1, 7, 2}},
+                                {{1, 5, 3, 7}},
+                                {{5, 0, 6, 3}},
+                                {{6, 2, 7, 3}},
+                                {{0, 5, 1, 4}}
+                        };
                         double RotateX = configuration[nameFigure]["rotateX"];
                         double RotateY = configuration[nameFigure]["rotateY"];
                         double RotateZ = configuration[nameFigure]["rotateZ"];
@@ -458,18 +448,12 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         f.points.push_back(Vector3D::point(1,1,1));
                         f.points.push_back(Vector3D::point(-1,-1,1));
                         f.points.push_back(Vector3D::point(1,1,-1));
-                        Face face1;
-                        face1.point_indexes = {0,2,3};
-                        f.faces.push_back(face1);
-                        Face face2;
-                        face2.point_indexes = {1,3,2};
-                        f.faces.push_back(face2);
-                        Face face3;
-                        face3.point_indexes = {0,3,1};
-                        f.faces.push_back(face3);
-                        Face face4;
-                        face4.point_indexes = {0,2,3};
-                        f.faces.push_back(face4);
+                        f.faces = {
+                                {{0, 2, 3}},
+                                {{1, 3, 2}},
+                                {{0, 3, 1}},
+                                {{0, 2, 3}}
+                        };
                         double RotateX = configuration[nameFigure]["rotateX"];
                         double RotateY = configuration[nameFigure]["rotateY"];
                         double RotateZ = configuration[nameFigure]["rotateZ"];
@@ -491,30 +475,16 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         f.points.push_back(Vector3D::point(0,-1,0));
                         f.points.push_back(Vector3D::point(0,0,-1));
                         f.points.push_back(Vector3D::point(0,0,1));
-                        Face face1;
-                        face1.point_indexes = {0,1,5};
-                        f.faces.push_back(face1);
-                        Face face2;
-                        face2.point_indexes = {1,2,5};
-                        f.faces.push_back(face2);
-                        Face face3;
-                        face3.point_indexes = {2,3,5};
-                        f.faces.push_back(face3);
-                        Face face4;
-                        face4.point_indexes = {3,0,5};
-                        f.faces.push_back(face4);
-                        Face face5;
-                        face5.point_indexes = {1,0,4};
-                        f.faces.push_back(face5);
-                        Face face6;
-                        face6.point_indexes = {2,1,4};
-                        f.faces.push_back(face6);
-                        Face face7;
-                        face7.point_indexes = {3,2,4};
-                        f.faces.push_back(face7);
-                        Face face8;
-                        face8.point_indexes = {0,3,4};
-                        f.faces.push_back(face8);
+                        f.faces = {
+                                {{0, 1, 5}},
+                                {{1, 2, 5}},
+                                {{2, 3, 5}},
+                                {{3, 0, 5}},
+                                {{1, 0, 4}},
+                                {{2, 1, 4}},
+                                {{3, 2, 4}},
+                                {{0, 3, 4}}
+                        };
                         double RotateX = configuration[nameFigure]["rotateX"];
                         double RotateY = configuration[nameFigure]["rotateY"];
                         double RotateZ = configuration[nameFigure]["rotateZ"];
