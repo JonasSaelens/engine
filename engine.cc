@@ -72,6 +72,8 @@ img::EasyImage Blocks(int width, int height, std::vector<double> colorWhite, std
         fout.close();
         return image;
 }
+
+//niet werkend
 /*img::EasyImage Lines(int width, int height, std::string figure ,std::vector<double> backgroundcolor, std::vector<double> lineColor, int nrLines) {
         img::EasyImage image(width,height);
         if (figure =="QuarterCircle") {
@@ -437,28 +439,3 @@ int main(int argc, char const* argv[])
         }
         return retVal;
 }
-/*int main()
-{
-        Matrix rotZ, trans;
-        Vector3D p0;
-        rotZ(1,1) = 0.866025404;
-        rotZ(1,2) = 0.5;
-        rotZ(2,1) = -0.5;
-        rotZ(2,2) = rotZ(1,1);
-        trans(4,1) = 1.0;
-        trans(4,2) = 2.0;
-        trans(4,3) = 3.0;
-        Matrix combined = rotZ*trans;
-
-        p0 = Vector3D::point(2.0, 3.0, 4.0);
-        std::cout << "p0 =\t\t" << p0 << std::endl;
-        Vector3D p1 = p0*rotZ;
-        std::cout << "p1 = p0*rotZ =\t"
-                << p1 << std::endl;
-        std::cout << "p1*trans =\t"
-                << (p1*trans) << std::endl;
-        std::cout << "p0*combined =\t"
-                << (p0*combined) << std::endl;
-        return 0;
-}*/
-
