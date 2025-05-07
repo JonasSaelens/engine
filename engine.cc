@@ -689,6 +689,118 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         applyTransformation(f, matrix);
                         figures.push_back(f);
                 }
+                else if (figureType == "Cone") {
+                        Figure f;
+
+                        double RotateX = configuration[nameFigure]["rotateX"];
+                        double RotateY = configuration[nameFigure]["rotateY"];
+                        double RotateZ = configuration[nameFigure]["rotateZ"];
+                        double scale = configuration[nameFigure]["scale"];
+                        std::vector<double> center = configuration[nameFigure]["center"];
+                        std::vector<double> color = configuration[nameFigure]["color"];
+                        int n = configuration[nameFigure]["n"];
+                        double height = configuration[nameFigure]["height"];
+                        int r = 1;
+
+                        for (int k = 0; k<n; k++) {
+                                f.points.push_back(Vector3D::point(cos(2*k*M_PI/n), sin(2*k*M_PI/n), 0));
+                        }
+                        f.points.push_back(Vector3D::point(0,0,height));
+                        std::vector<int> nConnect;
+                        for (int k = 0; k<n; k ++) {
+                                f.faces.push_back({{k, (k+1)%n, n}});
+                                nConnect.push_back(k);
+                        }
+                        f.faces.push_back({nConnect});
+
+                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
+
+                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+
+                        applyTransformation(f, matrix);
+                        figures.push_back(f);
+                }
+                else if (figureType == "Cylinder") {
+                        Figure f;
+
+                        double RotateX = configuration[nameFigure]["rotateX"];
+                        double RotateY = configuration[nameFigure]["rotateY"];
+                        double RotateZ = configuration[nameFigure]["rotateZ"];
+                        double scale = configuration[nameFigure]["scale"];
+                        std::vector<double> center = configuration[nameFigure]["center"];
+                        std::vector<double> color = configuration[nameFigure]["color"];
+                        int n = configuration[nameFigure]["n"];
+                        double height = configuration[nameFigure]["height"];
+                        int r = 1;
+
+                        for (int k = 0; k<n; k++) {
+                                f.points.push_back(Vector3D::point(cos(2*k*M_PI/n), sin(2*k*M_PI/n), 0));
+                        }
+                        for (int k = 0; k<n; k++) {
+                                f.points.push_back(Vector3D::point(cos(2*k*M_PI/n), sin(2*k*M_PI/n), height));
+                        }
+                        f.points.push_back(Vector3D::point(0,0,height));
+                        for (int k = 0; k < n; k++) {
+                                int next = (k + 1) % n;
+                                f.faces.push_back({{k, next, next + n, k + n}});
+                        }
+                        f.faces.push_back({{n-1, 0, n,2*n-1}});
+
+                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
+
+                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+
+                        applyTransformation(f, matrix);
+                        figures.push_back(f);
+                }
+                else if (figureType == "Torus") {
+                        Figure f;
+
+                        double RotateX = configuration[nameFigure]["rotateX"];
+                        double RotateY = configuration[nameFigure]["rotateY"];
+                        double RotateZ = configuration[nameFigure]["rotateZ"];
+                        double scale = configuration[nameFigure]["scale"];
+                        std::vector<double> center = configuration[nameFigure]["center"];
+                        std::vector<double> color = configuration[nameFigure]["color"];
+                        int n = configuration[nameFigure]["n"];
+                        int m = configuration[nameFigure]["m"];
+                        double r = configuration[nameFigure]["r"];
+                        double R = configuration[nameFigure]["R"];
+
+                        std::vector<std::vector<int>> track(n, std::vector<int>(m));
+                        int counter = 0;
+
+                        for (int k = 0; k < n; k++) {
+                                double theta = 2 * M_PI * k / n;
+                                for (int j = 0; j < m; j++) {
+                                        double phi = 2 * M_PI * j / m;
+
+                                        double x = (R + r * cos(phi)) * cos(theta);
+                                        double y = (R + r * cos(phi)) * sin(theta);
+                                        double z = r * sin(phi);
+
+                                        f.points.push_back(Vector3D::point(x, y, z));
+                                        track[k][j] = counter++;
+                                }
+                        }
+
+                        // Faces (quads between tube segments)
+                        for (int k = 0; k < n; k++) {
+                                for (int j = 0; j < m; j++) {
+                                        int a = track[k][j];
+                                        int b = track[(k + 1) % n][j];
+                                        int c = track[(k + 1) % n][(j + 1) % m];
+                                        int d = track[k][(j + 1) % m];
+                                        f.faces.push_back({{a, b, c, d}});
+                                }
+                        }
+                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
+
+                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+
+                        applyTransformation(f, matrix);
+                        figures.push_back(f);
+                }
         }
         Lines2D list = doProjectionLines(figures);
         if (!list.empty())
