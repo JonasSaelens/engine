@@ -13,6 +13,7 @@
 #include <stack>
 
 #include "_3D_Figures.h"
+#include "_3D_MatrixFunctions.h"
 
 img::EasyImage ColorRectangle(int width, int height) {
         img::EasyImage image(width,height);
@@ -233,104 +234,12 @@ img::EasyImage LSystem2D(int size, std::vector<double> backgroundColor, std::str
         return drawLines2D(list, size, backgroundColor);
 }
 
-Matrix Scale(const double scale) {
-        Matrix matrix;
-        matrix(1,1) = scale;
-        matrix(2,2) = scale;
-        matrix(3,3) = scale;
-        return matrix;
-}
-Matrix rotateX(const double angle) {
-        Matrix matrix;
-        double radiant = angle * (M_PI /180);
-        matrix(2,2) = cos(radiant);
-        matrix(2,3) = sin(radiant);
-        matrix(3,2) = -sin(radiant);
-        matrix(3,3) = cos(radiant);
-        return matrix;
-}
-Matrix rotateY(const double angle) {
-        Matrix matrix;
-        double radiant = angle * (M_PI /180);
-        matrix(1,1) = cos(radiant);
-        matrix(1,3) = -sin(radiant);
-        matrix(3,1) = sin(radiant);
-        matrix(3,3) = cos(radiant);
-        return matrix;
-}
-Matrix rotateZ(const double angle) {
-        Matrix matrix;
-        double radiant = angle * (M_PI /180);
-        matrix(1,1) = cos(radiant);
-        matrix(1,2) = sin(radiant);
-        matrix(2,1) = -sin(radiant);
-        matrix(2,2) = cos(radiant);
-        return matrix;
-}
-Matrix translate(const Vector3D &vector) {
-        Matrix matrix;
-        matrix(4,1) = vector.x;
-        matrix(4,2) = vector.y;
-        matrix(4,3) = vector.z;
-        return matrix;
-}
-void applyTransformation(Figure &fig, const Matrix &m) {
-        for (auto &i : fig.points) {
-                i *= m;
-        }
-}
-void toPolar(const Vector3D &point, double &theta, double &phi, double &r) {
-        r = sqrt(pow(point.x,2)+pow(point.y,2)+pow(point.z,2));
-        theta = atan2(point.y,point.x);
-        phi = acos(point.z/r);
-}
-Matrix eyePointTrans(const Vector3D &eyepoint) {
-        double theta, phi, r;
-        toPolar(eyepoint, theta, phi, r);
-
-        Matrix V;
-
-        V(1,1)= -sin(theta);
-        V(1,2)= -cos(theta) * cos(phi);
-        V(1,3)= cos(theta) * sin(phi);
-        V(2,1)= cos(theta);
-        V(2,2)= -sin(theta) * cos(phi);
-        V(2,3)= sin(theta) * sin(phi);
-        V(3,2)= sin(phi);
-        V(3,3)= cos(phi);
-        V(4,3)= -r;
-
-        return V;
-}
-Point2D doProjectionPoint(const Vector3D &point, const double d) {
-        double X = d*point.x/-point.z;
-        double Y = d*point.y/-point.z;
-        return Point2D(X, Y);
-}
-Lines2D doProjectionLines(const Figures3D &figures) {
-        Lines2D lines;
-        for (auto& f : figures) {
-                for (auto& face : f.faces) {
-                        img::Color color = f.color;
-                        int n = face.point_indexes.size();
-                        for (int i = 0; i < n; ++i) {
-                                int current_index = face.point_indexes[i];
-                                int next_index = face.point_indexes[(i + 1) % n];
-                                Point2D pointX = doProjectionPoint(f.points[current_index], 1);
-                                Point2D pointY = doProjectionPoint(f.points[next_index], 1);
-                                lines.push_back(Line2D(pointX, pointY, color));
-                        }
-                }
-        }
-        return lines;
-}
 img::EasyImage drawLines3D(const ini::Configuration &configuration) {
         int size = configuration["General"]["size"];
         std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
         int nrFigures = configuration["General"]["nrFigures"];
         std::vector<double> eye = configuration["General"]["eye"];
         Figures3D figures;
-        Matrix V = eyePointTrans(Vector3D::point(eye[0], eye[1], eye[2]));
         for (int i = 0; i < nrFigures; i++) {
                 Figure f;
                 std::string nameFigure = "Figure" + std::to_string(i);
@@ -401,12 +310,12 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                 }
                 f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
 
-                Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+                Matrix matrix = _3D_MatrixFunctions::Scale(scale) * _3D_MatrixFunctions::rotateX(RotateX) * _3D_MatrixFunctions::rotateY(RotateY) * _3D_MatrixFunctions::rotateZ(RotateZ) * _3D_MatrixFunctions::translate(Vector3D::point(center[0],center[1],center[2])) * _3D_MatrixFunctions::eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
 
-                applyTransformation(f, matrix);
+                _3D_MatrixFunctions::applyTransformation(f, matrix);
                 figures.push_back(f);
         }
-        Lines2D list = doProjectionLines(figures);
+        Lines2D list = _3D_MatrixFunctions::doProjectionLines(figures);
         if (!list.empty())
                 return drawLines2D(list, size, backgroundColor);
         return img::EasyImage();

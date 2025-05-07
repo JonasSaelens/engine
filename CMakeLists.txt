@@ -21,6 +21,7 @@ set(engine_sources
 	l_parser.cc
 	vector3d.cc
 	_3D_Figures.cpp
+	_3D_MatrixFunctions.cpp
 )
 
 ############################################################

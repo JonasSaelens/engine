@@ -6,7 +6,6 @@
 #define STRUCTS_H
 
 #include "easy_image.h"
-#include "ini_configuration.h"
 #include "vector3d.h"
 
 #include <list>
