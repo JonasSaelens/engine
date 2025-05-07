@@ -332,22 +332,18 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
         Figures3D figures;
         Matrix V = eyePointTrans(Vector3D::point(eye[0], eye[1], eye[2]));
         for (int i = 0; i < nrFigures; i++) {
+                Figure f;
                 std::string nameFigure = "Figure" + std::to_string(i);
                 std::string figureType = configuration[nameFigure]["type"];
+                double RotateX = configuration[nameFigure]["rotateX"];
+                double RotateY = configuration[nameFigure]["rotateY"];
+                double RotateZ = configuration[nameFigure]["rotateZ"];
+                double scale = configuration[nameFigure]["scale"];
+                std::vector<double> center = configuration[nameFigure]["center"];
+                std::vector<double> color = configuration[nameFigure]["color"];
                 if (figureType == "LineDrawing") {
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
                         int nrPoints = configuration[nameFigure]["nrPoints"];
                         int nrLines = configuration[nameFigure]["nrLines"];
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        Figure f;
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
                         for (int j = 0; j < nrPoints; j++) {
                                 std::string namePoint = "point" + std::to_string(j);
                                 std::vector<double> point = configuration[nameFigure][namePoint];
@@ -360,169 +356,55 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                                 face.point_indexes = line;
                                 f.faces.push_back(face);
                         }
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
                 }
                 else if (figureType == "Cube") {
-                        Figure f = _3D_Figures::createCube();
-
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
+                        f = _3D_Figures::createCube();
                 }
                 else if (figureType == "Tetrahedron") {
-                        Figure f = _3D_Figures::createTetrahedron();
-
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
+                        f = _3D_Figures::createTetrahedron();
                 }
                 else if (figureType == "Octahedron") {
-                        Figure f = _3D_Figures::createOctahedron();
-
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
+                        f = _3D_Figures::createOctahedron();
                 }
                 else if (figureType == "Icosahedron") {
-                        Figure f = _3D_Figures::createIcosahedron();
-
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
+                        f = _3D_Figures::createIcosahedron();
                 }
                 else if (figureType == "Dodecahedron") {
-                        Figure f = _3D_Figures::createDodecahedron();
-
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
+                        f = _3D_Figures::createDodecahedron();
                 }
                 else if (figureType == "Sphere") {
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
                         int n = configuration[nameFigure]["n"];
 
-                        Figure f = _3D_Figures::createSphere(n);
-
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
+                        f = _3D_Figures::createSphere(n);
                 }
                 else if (figureType == "Cone") {
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
                         int n = configuration[nameFigure]["n"];
                         double height = configuration[nameFigure]["height"];
-                        int r = 1;
 
-                        Figure f = _3D_Figures::createCone(n, height);
+                        f = _3D_Figures::createCone(n, height);
 
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
                 }
                 else if (figureType == "Cylinder") {
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
                         int n = configuration[nameFigure]["n"];
                         double height = configuration[nameFigure]["height"];
-                        int r = 1;
 
-                        Figure f = _3D_Figures::createCylinder(n, height);
+                        f = _3D_Figures::createCylinder(n, height);
 
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
                 }
                 else if (figureType == "Torus") {
-                        double RotateX = configuration[nameFigure]["rotateX"];
-                        double RotateY = configuration[nameFigure]["rotateY"];
-                        double RotateZ = configuration[nameFigure]["rotateZ"];
-                        double scale = configuration[nameFigure]["scale"];
-                        std::vector<double> center = configuration[nameFigure]["center"];
-                        std::vector<double> color = configuration[nameFigure]["color"];
                         int n = configuration[nameFigure]["n"];
                         int m = configuration[nameFigure]["m"];
                         double r = configuration[nameFigure]["r"];
                         double R = configuration[nameFigure]["R"];
 
-                        Figure f = _3D_Figures::createTorus(r,R,n,m);
-
-                        f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
-
-                        Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
-
-                        applyTransformation(f, matrix);
-                        figures.push_back(f);
+                        f = _3D_Figures::createTorus(r,R,n,m);
                 }
+                f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
+
+                Matrix matrix = Scale(scale) * rotateX(RotateX) * rotateY(RotateY) * rotateZ(RotateZ) * translate(Vector3D::point(center[0],center[1],center[2])) * eyePointTrans(Vector3D::point(eye[0],eye[1],eye[2]));;
+
+                applyTransformation(f, matrix);
+                figures.push_back(f);
         }
         Lines2D list = doProjectionLines(figures);
         if (!list.empty())
