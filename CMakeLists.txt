@@ -20,6 +20,7 @@ set(engine_sources
 	ini_configuration.cc
 	l_parser.cc
 	vector3d.cc
+	_3D_Figures.cpp
 )
 
 ############################################################
