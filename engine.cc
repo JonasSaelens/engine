@@ -147,7 +147,7 @@ img::EasyImage drawLines2D(Lines2D &lines, const int size, std::vector<double> b
         return image;
 }
 
-img::EasyImage LSystem2D(int size, std::vector<double> backgroundColor, std::string inputfile, std::vector<double> color){
+img::EasyImage LSystem2D(int size, std::vector<double> backgroundColor, const std::string& inputfile, std::vector<double> color){
         LParser::LSystem2D l_system;
         Lines2D list;
 
@@ -165,11 +165,6 @@ img::EasyImage LSystem2D(int size, std::vector<double> backgroundColor, std::str
         double radial = l_system.get_angle() * M_PI/180;
         double startingradial = l_system.get_starting_angle() * M_PI/180;
         std::set<char> alphabet = l_system.get_alphabet();
-        std::vector<bool> draws;
-        for (char c : alphabet) {
-                bool draw = l_system.draw(c);
-                draws.push_back(draw);
-        }
         std::string init = l_system.get_initiator();
         std::string startingstring = init;
         std::string endstring = "";
@@ -234,6 +229,130 @@ img::EasyImage LSystem2D(int size, std::vector<double> backgroundColor, std::str
                 }
         }
         return drawLines2D(list, size, backgroundColor);
+}
+Figure LSystem3D(const std::string& inputfile){
+        LParser::LSystem3D l_system;
+        Figure f;
+
+        std::ifstream input_stream(inputfile);
+        input_stream >> l_system;
+        input_stream.close();
+
+        std::stack<Vector3D> stack;
+        Vector3D H = Vector3D::vector(1,0,0);
+        Vector3D L = Vector3D::vector(0,1,0);
+        Vector3D U = Vector3D::vector(0,0,1);
+        std::stack<Vector3D> stack1;
+        std::stack<Vector3D> stack2;
+        std::stack<Vector3D> stack3;
+
+        double radial = l_system.get_angle() * M_PI/180;
+        std::set<char> alphabet = l_system.get_alphabet();
+        std::string init = l_system.get_initiator();
+        std::string startingstring = init;
+        std::string endstring;
+        for (int i = 0; i < l_system.get_nr_iterations(); i++) {
+                for (char k : startingstring) {
+                        for (char j: alphabet) {
+                                if (k == j) {
+                                        endstring += l_system.get_replacement(j);
+                                }
+                        }
+                        if (k == '+')
+                                endstring += "+";
+                        else if (k == '-')
+                                endstring += "-";
+                        else if (k == '(')
+                                endstring += "(";
+                        else if (k == ')')
+                                endstring += ")";
+                        else if (k == '^')
+                                endstring += "^";
+                        else if (k == '&')
+                                endstring += "&";
+                        else if (k == '\\')
+                                endstring += "\\";
+                        else if (k == '/')
+                                endstring += "/";
+                        else if (k == '|')
+                                endstring += "|";
+                }
+                startingstring = endstring;
+                endstring = "";
+        }
+        //std::cout << startingstring << std::endl;
+        Vector3D coor = Vector3D::point(0,0,0);
+        f.points.push_back(coor);
+        int teller = 1;
+        for (char c : startingstring) {
+                Vector3D copyH = H;
+                Vector3D copyL = L;
+                Vector3D copyU = U;
+                for (char k: alphabet) {
+                        if (c==k) {
+                                if (l_system.draw(k)) {
+                                        coor += H;
+                                        f.points.push_back(coor);
+                                        f.faces.push_back({{teller, teller-1}});
+                                        teller++;
+                                }
+                                else {
+                                        coor += H;
+                                        f.points.push_back(coor);
+                                        teller++;
+                                }
+                        }
+                }
+                if (c == '+') {
+                        H = H*cos(radial) + L*sin(radial);
+                        L = -copyH*sin(radial) + L*cos(radial);
+                }
+                else if (c == '-') {
+                        H = H*cos(-radial) + L*sin(-radial);
+                        L = -copyH*sin(-radial) + L*cos(-radial);
+                }
+                else if (c == '^') {
+                        H = H*cos(radial) + U*sin(radial);
+                        U = -copyH*sin(radial) + U*cos(radial);
+                }
+                else if (c == '&') {
+                        H = H*cos(-radial) + U*sin(-radial);
+                        U = -copyH*sin(-radial) + U*cos(-radial);
+                }
+                else if (c == '\\') {
+                        L = L*cos(radial) - U*sin(radial);
+                        U = copyL*sin(radial) + U*cos(radial);
+                }
+                else if (c == '/') {
+                        L = L*cos(-radial) - U*sin(-radial);
+                        U = copyL*sin(-radial) + U*cos(-radial);
+                }
+                else if (c == '|') {
+                        H = -H;
+                        L = -L;
+                }
+                else if (c == '(') {
+                        stack.push(coor);
+                        stack1.push(H);
+                        stack2.push(L);
+                        stack3.push(U);
+                }
+                else if (c == ')') {
+                        if (!stack.empty() && !stack1.empty() && !stack2.empty() && !stack3.empty()) {
+                                coor = stack.top();
+                                H = stack1.top();
+                                L = stack2.top();
+                                U = stack3.top();
+                                stack.pop();
+                                stack1.pop();
+                                stack2.pop();
+                                stack3.pop();
+                                f.points.push_back(coor);
+                                teller++;
+                        }
+                }
+        }
+        return f;
 }
 
 img::EasyImage drawLines3D(const ini::Configuration &configuration) {
@@ -309,6 +428,10 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                         double R = configuration[nameFigure]["R"];
 
                         f = _3D_Figures::createTorus(r,R,n,m);
+                }
+                else if (figureType == "3DLSystem") {
+                        std::string inputFile = configuration[nameFigure]["inputfile"];
+                        f = LSystem3D(inputFile);
                 }
                 f.color = img::Color(color[0]*255, color[1]*255, color[2]*255);
 
