@@ -128,18 +128,14 @@ img::EasyImage drawLines2D(Lines2D &lines, const int size, std::vector<double> b
         }
         double DCx = d*((xMin+xMax)/2);
         double DCy = d*((yMin+yMax)/2);
-        double dx = (imageX/2)-DCx;
-        double dy = (imageY/2)-DCy;
+        double dx = imageX/2-DCx;
+        double dy = imageY/2-DCy;
         for (auto &line : lines) {
                 line.p1.x += dx;
                 line.p1.y += dy;
                 line.p2.x += dx;
                 line.p2.y += dy;
-                lround(line.p1.x);
-                lround(line.p1.y);
-                lround(line.p2.x);
-                lround(line.p2.y);
-                image.draw_line(line.p1.x, line.p1.y, line.p2.x, line.p2.y, line.color);
+                image.draw_line(lround(line.p1.x), lround(line.p1.y), lround(line.p2.x), lround(line.p2.y), line.color);
         }
         std::ofstream fout("out.bmp", std::ios::binary);
         fout << image;

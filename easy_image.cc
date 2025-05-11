@@ -261,6 +261,70 @@ void img::EasyImage::draw_line(unsigned int x0, unsigned int y0, unsigned int x1
 		}
 	}
 }
+void img::EasyImage::draw_zbuf_line(ZBuffer &zbuffer, unsigned int x0, unsigned int y0,double z0, unsigned int x1, unsigned int y1, double z1,const Color &color)
+{
+	if (x0 >= this->width || y0 >= this->height || x1 >= this->width || y1 > this->height) {
+		std::stringstream ss;
+		ss << "Drawing line from (" << x0 << "," << y0 << ") to (" << x1 << "," << y1 << ") in image of width "
+			<< this->width << " and height " << this->height;
+		throw std::runtime_error(ss.str());
+	}
+	if (x0 == x1 && y0 == y1) {
+		if (1/z0 + 1/z1 < zbuffer[x0][y0]) {
+			// *this(x0,y0) = color;
+			zbuffer[x0][y0] = 1/z0 + 1/z1;
+		}
+	}
+	else if (x0 == x1)
+	{
+		// Special case for vertical line
+		for (int i = (int) (std::max(y0, y1) - std::min(y0, y1)); i >= 0; i--)
+		{
+			(*this)(x0, std::min(y0, y1) + i) = color;
+		}
+	}
+	else if (y0 == y1)
+	{
+		// Special case for horizontal line
+		for (int i = (int) (std::max(x0, x1) - std::min(x0, x1)); i >= 0; i--)
+		{
+			(*this)(std::min(x0, x1) + i, y0) = color;
+		}
+	}
+	else
+	{
+		if (x0 > x1)
+		{
+			// Flip points if x1 > x0 to ensure x0 has the lowest value
+			std::swap(x0, x1);
+			std::swap(y0, y1);
+		}
+		double m = ((double)y1 - (double)y0) / ((double)x1 - (double)x0);
+		if (-1.0 <= m && m <= 1.0)
+		{
+			for (int i = (int) (x1 - x0); i >= 0; i--)
+			{
+				(*this)(x0 + i, (unsigned int)round(y0 + m * i)) = color;
+			}
+		}
+		else if (m > 1.0)
+		{
+			for (int i = (int) (y1 - y0); i >= 0; i--)
+			{
+				(*this)((unsigned int)round(x0 + (i / m)), y0 + i) = color;
+			}
+		}
+		else if (m < -1.0)
+		{
+			for (int i = (int) (y0 - y1); i >= 0; i--)
+			{
+				(*this)((unsigned int)round(x0 - (i / m)), y0 - i) = color;
+			}
+		}
+	}
+}
+
+
 std::ostream& img::operator<<(std::ostream& out, EasyImage const& image)
 {
 

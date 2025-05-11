@@ -22,6 +22,8 @@ set(engine_sources
 	vector3d.cc
 	_3D_Figures.cpp
 	_3D_MatrixFunctions.cpp
+	zbuffer.cpp
+	zbuffer.h
 )
 
 ############################################################
