@@ -271,10 +271,10 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 	}
 
 	if (x0 == x1 && y0 == y1) {
-		double new_z_value = (1.0 / z0 + 1.0 / z1) / 2.0;
-		if (new_z_value < buffer[x0][y0]) {
+		double z = (1.0 / z0 + 1.0 / z1) / 2.0;
+		if (z < buffer[x0][y0]) {
 			image(x0, y0) = color;
-			buffer[x0][y0] = new_z_value;
+			buffer[x0][y0] = z;
 		}
 	}
 	else if (x0 == x1 || y0 == y1) {
@@ -324,11 +324,11 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 			}
 
 			double alpha = 1.0 - ((double)i / steps);
-			double new_z_value = alpha / z0 + (1.0 - alpha) / z1;
+			double z = alpha / z0 + (1.0 - alpha) / z1;
 
-			if (new_z_value < buffer[x][y]) {
+			if (z < buffer[x][y]) {
 				image(x, y) = color;
-				buffer[x][y] = new_z_value;
+				buffer[x][y] = z;
 			}
 		}
 	}
@@ -350,12 +350,12 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 				double t = i / a;
 				unsigned int x = x0 + i;
 				unsigned int y = (unsigned int)round(y0 + m * i);
-				double cur_z_value = buffer[x][y];
-				double new_z_value = (1 - t) / z0 + t / z1;
+				double currrent = buffer[x][y];
+				double z = (1 - t) / z0 + t / z1;
 
-				if (new_z_value < cur_z_value) {
+				if (z < currrent) {
 					image(x, y) = color;
-					buffer[x][y] = new_z_value;
+					buffer[x][y] = z;
 				}
 			}
 		}
@@ -367,12 +367,12 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 				double t = i / a;
 				unsigned int y = y0 + i;
 				unsigned int x = (unsigned int)round(x0 + i / m);
-				double cur_z_value = buffer[x][y];
-				double new_z_value = (1 - t) / z0 + t / z1;
+				double currrent = buffer[x][y];
+				double z = (1 - t) / z0 + t / z1;
 
-				if (new_z_value < cur_z_value) {
+				if (z < currrent) {
 					image(x, y) = color;
-					buffer[x][y] = new_z_value;
+					buffer[x][y] = z;
 				}
 			}
 		}
@@ -384,12 +384,12 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 				double t = i / a;
 				unsigned int y = y0 - i;
 				unsigned int x = (unsigned int)round(x0 - i / m);
-				double cur_z_value = buffer[x][y];
-				double new_z_value = (1 - t) / z0 + t / z1;
+				double currrent = buffer[x][y];
+				double z = (1 - t) / z0 + t / z1;
 
-				if (new_z_value < cur_z_value) {
+				if (z < currrent) {
 					image(x, y) = color;
-					buffer[x][y] = new_z_value;
+					buffer[x][y] = z;
 				}
 			}
 		}
