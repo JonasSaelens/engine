@@ -278,13 +278,50 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 		}
 	}
 	else if (x0 == x1 || y0 == y1) {
-		unsigned int dx = (x1 > x0) ? (x1 - x0) : (x0 - x1);
-		unsigned int dy = (y1 > y0) ? (y1 - y0) : (y0 - y1);
-		unsigned int steps = (dx == 0) ? dy : dx;
+		unsigned int dx, dy;
+		if (x1 > x0) {
+			dx = x1 - x0;
+		} else {
+			dx = x0 - x1;
+		}
+
+		if (y1 > y0) {
+			dy = y1 - y0;
+		} else {
+			dy = y0 - y1;
+		}
+
+		unsigned int steps;
+
+		if (dx == 0) {
+			steps = dy;
+		} else {
+			steps = dx;
+		}
 
 		for (unsigned int i = 0; i <= steps; ++i) {
-			unsigned int x = (dx == 0) ? x0 : (x0 < x1 ? x0 + i : x0 - i);
-			unsigned int y = (dy == 0) ? y0 : (y0 < y1 ? y0 + i : y0 - i);
+			unsigned int x;
+			if (dx == 0) {
+				x = x0;
+
+			} else {
+				if (x0 < x1) {
+					x = x0 + i;
+				} else {
+					x = x0 - i;
+				}
+			}
+
+			unsigned int y;
+			if (dy == 0) {
+				y = y0;
+			} else {
+				if (y0 < y1) {
+					y = y0 + i;
+				} else {
+					y = y0 - i;
+				}
+			}
 
 			double alpha = 1.0 - ((double)i / steps);
 			double new_z_value = alpha / z0 + (1.0 - alpha) / z1;
@@ -295,65 +332,68 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 			}
 		}
 	}
-    else
-    {
-        if (x0 > x1)
-        {
-        	// Flip points if x1 > x0 to ensure x0 has the lowest value
-            std::swap(x0, x1);
-            std::swap(y0, y1);
-            std::swap(z0, z1);
-        }
-        double m = ((double) y1 - (double) y0) / ((double) x1 - (double) x0);
-        if (-1.0 <= m && m <= 1.0)
-        {
-            double a = x1-x0;
-            unsigned int k = 0;
-            for (unsigned int i = 0; i <= x1 - x0; i++)
-            {
-                double cur_z_value = buffer[x0+i][(unsigned int) round(y0 + m * i)];
-                double new_z_value = (a-k)/a/z0 + (1-(a-k)/a)/z1;
-                k++;
+	else
+	{
+		if (x0 > x1)
+		{
+			// Flip points if x1 > x0 to ensure x0 has the lowest value
+			std::swap(x0, x1);
+			std::swap(y0, y1);
+			std::swap(z0, z1);
+		}
+		double m = ((double)y1 - (double)y0) / ((double)x1 - (double)x0);
+		if (-1.0 <= m && m <= 1.0)
+		{
+			double a = x1 - x0;
+			for (unsigned int i = 0; i <= x1 - x0; i++)
+			{
+				double t = i / a;
+				unsigned int x = x0 + i;
+				unsigned int y = (unsigned int)round(y0 + m * i);
+				double cur_z_value = buffer[x][y];
+				double new_z_value = (1 - t) / z0 + t / z1;
 
-                if (new_z_value < cur_z_value) {
-                    image(x0 + i, (unsigned int) round(y0 + m * i)) = color;
-                    buffer[x0+i][(unsigned int) round(y0 + m * i)] = new_z_value;
-                }
-            }
-        }
-        else if (m > 1.0)
-        {
-            double a = y1-y0;
-            unsigned int k = 0;
-            for (unsigned int i = 0; i <= y1 - y0; i++)
-            {
-                double cur_z_value = buffer[(unsigned int) round(x0 + i / m)][y0 + i];
-                double new_z_value = (a-k)/a/z0 + (1-(a-k)/a)/z1;
-                k++;
+				if (new_z_value < cur_z_value) {
+					image(x, y) = color;
+					buffer[x][y] = new_z_value;
+				}
+			}
+		}
+		else if (m > 1.0)
+		{
+			double a = y1 - y0;
+			for (unsigned int i = 0; i <= y1 - y0; i++)
+			{
+				double t = i / a;
+				unsigned int y = y0 + i;
+				unsigned int x = (unsigned int)round(x0 + i / m);
+				double cur_z_value = buffer[x][y];
+				double new_z_value = (1 - t) / z0 + t / z1;
 
-                if (new_z_value < cur_z_value) {
-                    image((unsigned int) round(x0 + i / m), y0 + i) = color;
-                    buffer[(unsigned int) round(x0 + i / m)][y0 + i] = new_z_value;
-                }
-            }
-        }
-        else if (m < -1.0)
-        {
-            double a = y0-y1;
-            unsigned int k = 0;
-            for (unsigned int i = 0; i <= (y0 - y1); i++)
-            {
-                double cur_z_value = buffer[(unsigned int) round(x0 - (i / m))][y0 - i];
-                double new_z_value = (a-k)/a/z0 + (1-(a-k)/a)/z1;
-                k++;
+				if (new_z_value < cur_z_value) {
+					image(x, y) = color;
+					buffer[x][y] = new_z_value;
+				}
+			}
+		}
+		else if (m < -1.0)
+		{
+			double a = y0 - y1;
+			for (unsigned int i = 0; i <= y0 - y1; i++)
+			{
+				double t = i / a;
+				unsigned int y = y0 - i;
+				unsigned int x = (unsigned int)round(x0 - i / m);
+				double cur_z_value = buffer[x][y];
+				double new_z_value = (1 - t) / z0 + t / z1;
 
-                if (new_z_value < cur_z_value) {
-                    image((unsigned int) round(x0 - i / m), y0 - i) = color;
-                    buffer[(unsigned int) round(x0 - i / m)][y0 - i] = new_z_value;
-                }
-            }
-        }
-    }
+				if (new_z_value < cur_z_value) {
+					image(x, y) = color;
+					buffer[x][y] = new_z_value;
+				}
+			}
+		}
+	}
 }
 
 
