@@ -278,18 +278,15 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 		}
 	}
 	else if (x0 == x1 || y0 == y1) {
-		// Vertical or horizontal line
-		int dx = static_cast<int>(x1) - static_cast<int>(x0);
-		int dy = static_cast<int>(y1) - static_cast<int>(y0);
+		unsigned int dx = (x1 > x0) ? (x1 - x0) : (x0 - x1);
+		unsigned int dy = (y1 > y0) ? (y1 - y0) : (y0 - y1);
+		unsigned int steps = (dx == 0) ? dy : dx;
 
-		int steps = std::max(std::abs(dx), std::abs(dy));
-		double step_z;
+		for (unsigned int i = 0; i <= steps; ++i) {
+			unsigned int x = (dx == 0) ? x0 : (x0 < x1 ? x0 + i : x0 - i);
+			unsigned int y = (dy == 0) ? y0 : (y0 < y1 ? y0 + i : y0 - i);
 
-		for (int i = 0; i <= steps; ++i) {
-			unsigned int x = x0 + (steps == 0 ? 0 : i * dx / steps);
-			unsigned int y = y0 + (steps == 0 ? 0 : i * dy / steps);
-
-			double alpha = 1.0 - static_cast<double>(i) / steps;
+			double alpha = 1.0 - ((double)i / steps);
 			double new_z_value = alpha / z0 + (1.0 - alpha) / z1;
 
 			if (new_z_value < buffer[x][y]) {
