@@ -95,7 +95,7 @@ img::EasyImage Blocks(int width, int height, std::vector<double> colorWhite, std
         return image;
 }*/
 
-img::EasyImage drawLines2D(Lines2D &lines, const int size, std::vector<double> backgroundColor) {
+img::EasyImage drawLines2D(Lines2D &lines, const int size, const std::vector<double> &backgroundColor, bool zbuffering = false) {
         double xMin = lines[0].p1.x;
         double xMax = lines[0].p1.x;
         double yMax = lines[0].p1.y;
@@ -111,6 +111,7 @@ img::EasyImage drawLines2D(Lines2D &lines, const int size, std::vector<double> b
         double imageX = size*(Xrange/std::max(Xrange,Yrange));
         double imageY = size*(Yrange/std::max(Xrange,Yrange));
         img::EasyImage image(lround(imageX), lround(imageY));
+        ZBuffer zbuffer(lround(imageX), lround(imageY));
         for(unsigned int i = 0; i < imageX-1; i++) {
                 for(unsigned int j = 0; j < imageY-1; j++)
                 {
@@ -135,7 +136,10 @@ img::EasyImage drawLines2D(Lines2D &lines, const int size, std::vector<double> b
                 line.p1.y += dy;
                 line.p2.x += dx;
                 line.p2.y += dy;
-                image.draw_line(lround(line.p1.x), lround(line.p1.y), lround(line.p2.x), lround(line.p2.y), line.color);
+                if (zbuffering)
+                        image.draw_zbuf_line(zbuffer,image,lround(line.p1.x), lround(line.p1.y),line.z1, lround(line.p2.x), lround(line.p2.y),line.z2, line.color);
+                else
+                        image.draw_line(lround(line.p1.x), lround(line.p1.y), lround(line.p2.x), lround(line.p2.y), line.color);
         }
         std::ofstream fout("out.bmp", std::ios::binary);
         fout << image;
@@ -351,7 +355,7 @@ Figure LSystem3D(const std::string& inputfile){
         return f;
 }
 
-img::EasyImage drawLines3D(const ini::Configuration &configuration) {
+img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffering = false) {
         int size = configuration["General"]["size"];
         std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
         int nrFigures = configuration["General"]["nrFigures"];
@@ -437,8 +441,11 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration) {
                 figures.push_back(f);
         }
         Lines2D list = _3D_MatrixFunctions::doProjectionLines(figures);
-        if (!list.empty())
+        if (!list.empty()) {
+                if (zbuffering)
+                        return drawLines2D(list, size, backgroundColor, true);
                 return drawLines2D(list, size, backgroundColor);
+        }
         return img::EasyImage();
 }
 img::EasyImage generate_image(const ini::Configuration &configuration)
@@ -477,6 +484,9 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
         }
         if (image_type == "Wireframe") {
                 return drawLines3D(configuration);
+        }
+        if (image_type == "ZBufferedWireframe") {
+                return drawLines3D(configuration, true);
         }
         return img::EasyImage();
 }

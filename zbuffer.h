@@ -8,14 +8,14 @@
 #include <vector>
 
 
-class ZBuffer: public std::vector<std::vector<double> >
-{
+class ZBuffer : public std::vector<std::vector<double>> {
 public:
-    //Constructor: maakt een Z-Buffer van de correcte
-    //grootte aan en initialiseert alle velden op +inf
-    ZBuffer(const int width, const int height) : buffer(width, std::vector<double>(height, std::numeric_limits<double>::infinity())) {}
-private:
-    std::vector<std::vector<double>> buffer;
+    ZBuffer(const unsigned int width, const unsigned int height) {
+        this->resize(width);
+        for (auto& column : *this) {
+            column.resize(height, std::numeric_limits<double>::infinity());
+        }
+    }
 };
 
 

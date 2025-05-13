@@ -91,7 +91,8 @@ Lines2D _3D_MatrixFunctions::doProjectionLines(const Figures3D &figures) {
                                 int next_index = face.point_indexes[(i + 1) % n];
                                 Point2D pointX = doProjectionPoint(f.points[current_index], 1);
                                 Point2D pointY = doProjectionPoint(f.points[next_index], 1);
-                                lines.push_back(Line2D(pointX, pointY, color));
+
+                                lines.push_back(Line2D(pointX, pointY, color, f.points[current_index].z, f.points[next_index].z));
                         }
                 }
         }
