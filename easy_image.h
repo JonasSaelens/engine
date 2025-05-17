@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include <vector>
 #include <iostream>
+
+#include "vector3d.h"
 #include "zbuffer.h"
 /**
  * \brief The namespace of the EasyImage class
@@ -221,6 +223,7 @@ namespace img
 			 */
 			void draw_line(unsigned int x0, unsigned int y0, unsigned int x1, unsigned int y1, Color color);
 			void draw_zbuf_line(ZBuffer &zbuffer, EasyImage &image,unsigned int x0,unsigned int y0,double z0,unsigned int x1,unsigned int y1,double z1, const Color &color);
+			void draw_zbuf_triag(ZBuffer &buffer, EasyImage &image, Vector3D const& A, Vector3D const& B, Vector3D const& C, double d, double dx, double dy, Color color);
 
 
 		private:

@@ -350,10 +350,10 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 				double t = i / a;
 				unsigned int x = x0 + i;
 				unsigned int y = (unsigned int)round(y0 + m * i);
-				double currrent = buffer[x][y];
+				double current = buffer[x][y];
 				double z = (1 - t) / z0 + t / z1;
 
-				if (z < currrent) {
+				if (z < current) {
 					image(x, y) = color;
 					buffer[x][y] = z;
 				}
@@ -367,10 +367,10 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 				double t = i / a;
 				unsigned int y = y0 + i;
 				unsigned int x = (unsigned int)round(x0 + i / m);
-				double currrent = buffer[x][y];
+				double current = buffer[x][y];
 				double z = (1 - t) / z0 + t / z1;
 
-				if (z < currrent) {
+				if (z < current) {
 					image(x, y) = color;
 					buffer[x][y] = z;
 				}
@@ -384,13 +384,73 @@ void img::EasyImage::draw_zbuf_line(ZBuffer &buffer, EasyImage &image,unsigned i
 				double t = i / a;
 				unsigned int y = y0 - i;
 				unsigned int x = (unsigned int)round(x0 - i / m);
-				double currrent = buffer[x][y];
+				double current = buffer[x][y];
 				double z = (1 - t) / z0 + t / z1;
 
-				if (z < currrent) {
+				if (z < current) {
 					image(x, y) = color;
 					buffer[x][y] = z;
 				}
+			}
+		}
+	}
+}
+void img::EasyImage::draw_zbuf_triag(ZBuffer &buffer, EasyImage &image, Vector3D const& A, Vector3D const& B, Vector3D const& C, double d, double dx, double dy, Color color) {
+	Vector3D a;
+	a.x = d*A.x/-A.z+dx;
+	a.y = d*A.y/-A.z+dy;
+	Vector3D b;
+	b.x = d*B.x/-B.z+dx;
+	b.y = d*B.y/-B.z+dy;
+	Vector3D c;
+	c.x = d*C.x/-C.z+dx;
+	c.y = d*C.y/-C.z+dy;
+
+	int yMin = lround(std::min(std::min(a.y, b.y),c.y)+0.5);
+	int yMax = lround(std::max(std::max(a.y, b.y),c.y)-0.5);
+
+	for (int yi = yMin; yi <= yMax; yi++) {
+		double xlAB = std::numeric_limits<double>::infinity();
+		double xlAC = std::numeric_limits<double>::infinity();
+		double xlBC = std::numeric_limits<double>::infinity();
+		double xrAB = -std::numeric_limits<double>::infinity();
+		double xrAC = -std::numeric_limits<double>::infinity();
+		double xrBC = -std::numeric_limits<double>::infinity();
+		if ((yi-a.y)*(yi-b.y)<=0 && a.y != b.y) {
+			double xi = b.x + (a.x-b.x)*((yi-b.y)/(a.y-b.y));
+			xlAB = xrAB = xi;
+		}
+		if ((yi-a.y)*(yi-c.y)<=0 && a.y != c.y) {
+			double xi = c.x + (a.x-c.x)*((yi-c.y)/(a.y-c.y));
+			xlAC = xrAC = xi;
+		}
+		if ((yi-b.y)*(yi-c.y)<=0 && b.y != c.y) {
+			double xi = c.x + (b.x-c.x)*((yi-c.y)/(b.y-c.y));
+			xlBC = xrBC = xi;
+		}
+		int xl = lround(std::min(std::min(xlAB,xlAC),xlBC)+0.5);
+		int xr = lround(std::max(std::max(xrAB,xrAC),xrBC)-0.5);
+
+		double xG = (a.x+b.x+c.x)/3;
+		double yG = (a.y+b.y+c.y)/3;
+
+		double _1zG = 1/(3*A.z) + 1/(3*B.z) + 1/(3*C.z);
+
+		Vector3D u = Vector3D::vector(B.x-A.x,B.y-A.y,B.z-A.z);
+		Vector3D v = Vector3D::vector(C.x-A.x,C.y-A.y,C.z-A.z);
+		double w1 = u.y*v.z - u.z*v.y;
+		double w2 = u.z*v.x - u.x*v.z;
+		double w3 = u.x*v.y - u.y*v.x;
+		const double k = w1*A.x + w2*A.y + w3*A.z;
+		const double dzdx = w1/(-d*k);
+		const double dzdy = w2/(-d*k);
+
+		for (int i = xl; i <= xr; i++) {
+			double current = buffer[i][yi];
+			double z = 1.0001*_1zG+(i-xG)*dzdx + (yi-yG)*dzdy;
+			if (z < current) {
+				image(i, yi) = color;
+				buffer[i][yi] = z;
 			}
 		}
 	}

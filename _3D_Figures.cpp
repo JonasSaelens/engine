@@ -159,18 +159,34 @@ Figure _3D_Figures::createCone(const int n, const double h) {
 }
 Figure _3D_Figures::createCylinder(const int n, const double h) {
     Figure f;
-    for (int k = 0; k<n; k++) {
-        f.points.push_back(Vector3D::point(cos(2*k*M_PI/n), sin(2*k*M_PI/n), 0));
+
+    for (int k = 0; k < n; k++) {
+        f.points.push_back(Vector3D::point(cos(2 * k * M_PI / n), sin(2 * k * M_PI / n), 0));
     }
-    for (int k = 0; k<n; k++) {
-        f.points.push_back(Vector3D::point(cos(2*k*M_PI/n), sin(2*k*M_PI/n), h));
+
+    for (int k = 0; k < n; k++) {
+        f.points.push_back(Vector3D::point(cos(2 * k * M_PI / n), sin(2 * k * M_PI / n), h));
     }
-    f.points.push_back(Vector3D::point(0,0,h));
+
+    int bottomCenterIdx = 2 * n;
+    int topCenterIdx = 2 * n + 1;
+    f.points.push_back(Vector3D::point(0, 0, 0));
+    f.points.push_back(Vector3D::point(0, 0, h));
+
     for (int k = 0; k < n; k++) {
         int next = (k + 1) % n;
         f.faces.push_back({{k, next, next + n, k + n}});
     }
-    f.faces.push_back({{n-1, 0, n,2*n-1}});
+
+    for (int k = 0; k < n; k++) {
+        int next = (k + 1) % n;
+        f.faces.push_back({{bottomCenterIdx, next, k}});
+    }
+
+    for (int k = 0; k < n; k++) {
+        int next = (k + 1) % n;
+        f.faces.push_back({{topCenterIdx, k + n, next + n}});
+    }
 
     return f;
 }

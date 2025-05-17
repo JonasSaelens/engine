@@ -14,6 +14,7 @@
 
 #include "_3D_Figures.h"
 #include "_3D_MatrixFunctions.h"
+#include "Triangulate.h"
 
 img::EasyImage ColorRectangle(int width, int height) {
         img::EasyImage image(width,height);
@@ -141,6 +142,54 @@ img::EasyImage drawLines2D(Lines2D &lines, const int size, const std::vector<dou
                 else
                         image.draw_line(lround(line.p1.x), lround(line.p1.y), lround(line.p2.x), lround(line.p2.y), line.color);
         }
+        std::ofstream fout("out.bmp", std::ios::binary);
+        fout << image;
+        fout.close();
+        return image;
+}
+img::EasyImage drawLines2DZbuffer(Lines2D &lines, Figures3D &f,const int size, const std::vector<double> &backgroundColor) {
+        double xMin = lines[0].p1.x;
+        double xMax = lines[0].p1.x;
+        double yMax = lines[0].p1.y;
+        double yMin = lines[0].p1.y;
+        for (auto &line : lines) {
+                xMin = std::min(std::min(line.p1.x,line.p2.x),xMin);
+                xMax = std::max(std::max(line.p1.x,line.p2.x),xMax);
+                yMax = std::max(std::max(line.p1.y,line.p2.y),yMax);
+                yMin = std::min(std::min(line.p1.y,line.p2.y),yMin);
+        }
+        double Xrange = xMax-xMin;
+        double Yrange = yMax-yMin;
+        double imageX = size*(Xrange/std::max(Xrange,Yrange));
+        double imageY = size*(Yrange/std::max(Xrange,Yrange));
+        img::EasyImage image(lround(imageX), lround(imageY));
+        ZBuffer zbuffer(lround(imageX), lround(imageY));
+        for(unsigned int i = 0; i < imageX-1; i++) {
+                for(unsigned int j = 0; j < imageY-1; j++)
+                {
+                        image(i,j).red = backgroundColor[0]*255;
+                        image(i,j).green = backgroundColor[1]*255;
+                        image(i,j).blue = backgroundColor[2]*255;
+                }
+        }
+        double d = 0.95*(imageX/Xrange);
+        double DCx = d*((xMin+xMax)/2);
+        double DCy = d*((yMin+yMax)/2);
+        double dx = imageX/2-DCx;
+        double dy = imageY/2-DCy;
+        Triangulate t;
+        for (Figure& fig : f) {
+                std::vector<Face> NewFaces;
+                for (Face& face : fig.faces) {
+                        std::vector<Face> newFaces = t.triangulate(face);
+                        NewFaces.insert(NewFaces.end(), newFaces.begin(), newFaces.end());
+                }
+                fig.faces = NewFaces;
+                for (Face& face : fig.faces) {
+                        image.draw_zbuf_triag(zbuffer,image, fig.points[face.point_indexes[0]], fig.points[face.point_indexes[1]], fig.points[face.point_indexes[2]], d, dx, dy, fig.color);
+                }
+        }
+
         std::ofstream fout("out.bmp", std::ios::binary);
         fout << image;
         fout.close();
@@ -355,7 +404,7 @@ Figure LSystem3D(const std::string& inputfile){
         return f;
 }
 
-img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffering = false) {
+img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffering = false, bool triangle = false) {
         int size = configuration["General"]["size"];
         std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
         int nrFigures = configuration["General"]["nrFigures"];
@@ -442,8 +491,11 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffer
         }
         Lines2D list = _3D_MatrixFunctions::doProjectionLines(figures);
         if (!list.empty()) {
-                if (zbuffering)
+                if (zbuffering) {
+                        if (triangle)
+                                return drawLines2DZbuffer(list, figures, size, backgroundColor);
                         return drawLines2D(list, size, backgroundColor, true);
+                }
                 return drawLines2D(list, size, backgroundColor);
         }
         return img::EasyImage();
@@ -487,6 +539,12 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
         }
         if (image_type == "ZBufferedWireframe") {
                 return drawLines3D(configuration, true);
+        }
+        if (image_type == "ZBufferedWireframe") {
+                return drawLines3D(configuration, true);
+        }
+        if (image_type == "ZBuffering") {
+                return drawLines3D(configuration, true, true);
         }
         return img::EasyImage();
 }
