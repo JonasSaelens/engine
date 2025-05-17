@@ -160,33 +160,33 @@ Figure _3D_Figures::createCone(const int n, const double h) {
 Figure _3D_Figures::createCylinder(const int n, const double h) {
     Figure f;
 
+    // Bottom circle points (z = 0)
     for (int k = 0; k < n; k++) {
         f.points.push_back(Vector3D::point(cos(2 * k * M_PI / n), sin(2 * k * M_PI / n), 0));
     }
 
+    // Top circle points (z = h)
     for (int k = 0; k < n; k++) {
         f.points.push_back(Vector3D::point(cos(2 * k * M_PI / n), sin(2 * k * M_PI / n), h));
     }
 
-    int bottomCenterIdx = 2 * n;
-    int topCenterIdx = 2 * n + 1;
-    f.points.push_back(Vector3D::point(0, 0, 0));
-    f.points.push_back(Vector3D::point(0, 0, h));
-
+    // Side quads
     for (int k = 0; k < n; k++) {
         int next = (k + 1) % n;
         f.faces.push_back({{k, next, next + n, k + n}});
     }
 
-    for (int k = 0; k < n; k++) {
-        int next = (k + 1) % n;
-        f.faces.push_back({{bottomCenterIdx, next, k}});
+    Face bottomFace;
+    for (int k = n - 1; k >= 0; k--) {
+        bottomFace.point_indexes.push_back(k);
     }
+    f.faces.push_back(bottomFace);
 
+    Face topFace;
     for (int k = 0; k < n; k++) {
-        int next = (k + 1) % n;
-        f.faces.push_back({{topCenterIdx, k + n, next + n}});
+        topFace.point_indexes.push_back(k+n);;
     }
+    f.faces.push_back(topFace);
 
     return f;
 }
