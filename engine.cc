@@ -404,12 +404,40 @@ Figure LSystem3D(const std::string& inputfile){
         return f;
 }
 
+Figures3D generateFractal(Figure& fig,const int nr_iterations, const double scale) {
+        std::vector<Figure> figures = {fig};
+        for (int i = 0; i<nr_iterations; i++) {
+                std::vector<Figure> currentNewFigures;
+                for (Figure& current : figures) {
+                        int index = 0;
+                        for (auto& point : current.points) {
+                                Figure temp = current;
+                                _3D_MatrixFunctions::applyTransformation(temp, _3D_MatrixFunctions::Scale(1/scale));
+                                _3D_MatrixFunctions::applyTransformation(temp, _3D_MatrixFunctions::translate(point - temp.points[index]));
+                                index++;
+                                currentNewFigures.push_back(temp);
+                        }
+                }
+                figures = currentNewFigures;
+        }
+
+        Figures3D fractal;
+        for (Figure& figure : figures) {
+                fractal.push_back(figure);
+        }
+        return fractal;
+}
+
 img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffering = false, bool triangle = false) {
         int size = configuration["General"]["size"];
         std::vector<double> backgroundColor = configuration["General"]["backgroundcolor"];
         int nrFigures = configuration["General"]["nrFigures"];
         std::vector<double> eye = configuration["General"]["eye"];
         Figures3D figures;
+        bool containsFractal = false;
+        std::vector<bool> fractal(nrFigures, false);
+        std::vector<int> nrIt(nrFigures, 0);
+        std::vector<double> fractalScale(nrFigures, 0);
         for (int i = 0; i < nrFigures; i++) {
                 Figure f;
                 std::string nameFigure = "Figure" + std::to_string(i);
@@ -420,7 +448,15 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffer
                 double scale = configuration[nameFigure]["scale"];
                 std::vector<double> center = configuration[nameFigure]["center"];
                 std::vector<double> color = configuration[nameFigure]["color"];
-                if (figureType == "LineDrawing") {
+                if (figureType == "FractalCube" || figureType == "FractalTetrahedron" || figureType == "FractalOctahedron" || figureType == "FractalIcosahedron" || figureType == "FractalDodecahedron" || figureType == "FractalLineDrawing" || figureType == "FractalSphere" || figureType == "FractalCone" || figureType == "FractalCylinder" || figureType == "FractalTorus" || figureType == "Fractal3DLSystem") {
+                        containsFractal = true;
+                        fractal[i] = true;
+                        int nrItTemp = configuration[nameFigure]["nrIterations"];
+                        double fractalScaleTemp = configuration[nameFigure]["fractalScale"];
+                        nrIt[i] = nrItTemp;
+                        fractalScale[i] = fractalScaleTemp;
+                }
+                if (figureType == "LineDrawing" || figureType == "FractalLineDrawing") {
                         int nrPoints = configuration[nameFigure]["nrPoints"];
                         int nrLines = configuration[nameFigure]["nrLines"];
                         for (int j = 0; j < nrPoints; j++) {
@@ -436,41 +472,41 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffer
                                 f.faces.push_back(face);
                         }
                 }
-                else if (figureType == "Cube") {
+                else if (figureType == "Cube" || figureType == "FractalCube") {
                         f = _3D_Figures::createCube();
                 }
-                else if (figureType == "Tetrahedron") {
+                else if (figureType == "Tetrahedron" || figureType == "FractalTetrahedron") {
                         f = _3D_Figures::createTetrahedron();
                 }
-                else if (figureType == "Octahedron") {
+                else if (figureType == "Octahedron" || figureType == "FractalOctahedron") {
                         f = _3D_Figures::createOctahedron();
                 }
-                else if (figureType == "Icosahedron") {
+                else if (figureType == "Icosahedron" || figureType == "FractalIcosahedron") {
                         f = _3D_Figures::createIcosahedron();
                 }
-                else if (figureType == "Dodecahedron") {
+                else if (figureType == "Dodecahedron" || figureType == "FractalDodecahedron") {
                         f = _3D_Figures::createDodecahedron();
                 }
-                else if (figureType == "Sphere") {
+                else if (figureType == "Sphere" || figureType == "FractalSphere") {
                         int n = configuration[nameFigure]["n"];
 
                         f = _3D_Figures::createSphere(n);
                 }
-                else if (figureType == "Cone") {
+                else if (figureType == "Cone" || figureType == "FractalCone") {
                         int n = configuration[nameFigure]["n"];
                         double height = configuration[nameFigure]["height"];
 
                         f = _3D_Figures::createCone(n, height);
 
                 }
-                else if (figureType == "Cylinder") {
+                else if (figureType == "Cylinder" || figureType == "FractalCylinder") {
                         int n = configuration[nameFigure]["n"];
                         double height = configuration[nameFigure]["height"];
 
                         f = _3D_Figures::createCylinder(n, height);
 
                 }
-                else if (figureType == "Torus") {
+                else if (figureType == "Torus" || figureType == "FractalTorus") {
                         int n = configuration[nameFigure]["n"];
                         int m = configuration[nameFigure]["m"];
                         double r = configuration[nameFigure]["r"];
@@ -478,7 +514,7 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffer
 
                         f = _3D_Figures::createTorus(r,R,n,m);
                 }
-                else if (figureType == "3DLSystem") {
+                else if (figureType == "3DLSystem" || figureType == "Fractal3DLSystem") {
                         std::string inputFile = configuration[nameFigure]["inputfile"];
                         f = LSystem3D(inputFile);
                 }
@@ -488,6 +524,26 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffer
 
                 _3D_MatrixFunctions::applyTransformation(f, matrix);
                 figures.push_back(f);
+        }
+        Figures3D finalFigures;
+
+        if (containsFractal) {
+                int index = 0;
+                for (auto& fig : figures) {
+                        if (fractal[index]) {
+                                Figures3D temp = generateFractal(fig, nrIt[index], fractalScale[index]);
+                                for (Figure& temp1 : temp) {
+                                        finalFigures.push_back(temp1);
+                                }
+                        }
+                        else {
+                                finalFigures.push_back(fig);
+                        }
+                        index++;
+                }
+        }
+        if (!finalFigures.empty()) {
+                figures = finalFigures;
         }
         Lines2D list = _3D_MatrixFunctions::doProjectionLines(figures);
         if (!list.empty()) {
@@ -500,6 +556,7 @@ img::EasyImage drawLines3D(const ini::Configuration &configuration, bool zbuffer
         }
         return img::EasyImage();
 }
+
 img::EasyImage generate_image(const ini::Configuration &configuration)
 {
         std::string image_type = configuration["General"]["type"];
