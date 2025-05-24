@@ -597,9 +597,6 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
         if (image_type == "ZBufferedWireframe") {
                 return drawLines3D(configuration, true);
         }
-        if (image_type == "ZBufferedWireframe") {
-                return drawLines3D(configuration, true);
-        }
         if (image_type == "ZBuffering") {
                 return drawLines3D(configuration, true, true);
         }
