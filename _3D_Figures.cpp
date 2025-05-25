@@ -31,7 +31,7 @@ Figure _3D_Figures::createTetrahedron() {
     f.points.push_back(Vector3D::point(1,1,1));
     f.points.push_back(Vector3D::point(-1,-1,1));
     f.faces = {
-        {{0, 2, 3}},
+        {{0, 1, 2}},
         {{1, 3, 2}},
         {{0, 3, 1}},
         {{0, 2, 3}}
